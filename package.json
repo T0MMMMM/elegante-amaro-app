@@ -1,4 +1,6 @@
 {
+  "name": "elegante-amaro-app",
+  "private": true,
   "workspaces": [
     "apps/*",
     "shared"
