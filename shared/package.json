@@ -1,6 +1,11 @@
 {
-    "name": "@elegante-amaro-app/shared",
-    "version": "1.0.0",
-    "private": true,
-    "main": "index.js"
+  "name": "@elegante-amaro-app/shared",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./constants": "./constants/index.ts",
+    "./constants/colors": "./constants/colors.ts",
+    "./constants/fonts": "./constants/fonts.ts",
+    "./types": "./types/index.ts"
+  }
 }
