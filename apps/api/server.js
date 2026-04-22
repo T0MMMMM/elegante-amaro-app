@@ -1,4 +1,6 @@
-const express = require("express");
+import { initDB } from "./src/config/database.js";
+import express from "express";
+import routes from "./src/routes/routes.js";
 
 const app = express();
 
@@ -7,7 +9,12 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.json({ message: "API Cafeteria OK" });
 });
+app.use(routes);
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+initDB().then(() => {
+    app.listen(3000, () => {
+        console.log(`Server is running on port 3000`);
+    });
+}).catch((err) => {
+    console.error('Unable to connect to the database:', err);
 });
