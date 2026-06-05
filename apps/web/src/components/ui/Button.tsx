@@ -14,8 +14,10 @@ interface ButtonProps {
 const base: CSSProperties = {
   fontFamily: theme.fonts.ui,
   fontSize: 11,
-  letterSpacing: '0.08em',
-  padding: '9px 20px',
+  fontWeight: 600,
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  padding: '10px 22px',
   border: 'none',
   borderRadius: 4,
   cursor: 'pointer',
@@ -23,12 +25,12 @@ const base: CSSProperties = {
 }
 
 const variantStyles: Record<Variant, CSSProperties> = {
-  primary: { backgroundColor: theme.colors.accent, color: '#fff' },
+  primary: { backgroundColor: theme.colors.accent, color: theme.colors.onSecondary },
   danger: { backgroundColor: theme.colors.danger, color: '#fff' },
   ghost: {
     backgroundColor: 'transparent',
     color: theme.colors.onPrimary,
-    border: `1px solid ${theme.colors.border}`,
+    border: `1.5px solid ${theme.colors.accent}`,
   },
 }
 
