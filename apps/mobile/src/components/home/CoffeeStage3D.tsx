@@ -1,5 +1,5 @@
 import Model3D from '@/src/components/utils/Model3D';
-import { COFFEE_MODEL } from '@/src/data/items.mock';
+import { COFFEE_MODEL } from '@/src/constants/assets';
 import {
   ContactShadows,
   OrbitControls,
