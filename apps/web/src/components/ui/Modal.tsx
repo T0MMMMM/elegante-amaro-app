@@ -7,9 +7,10 @@ interface ModalProps {
   onClose: () => void
   onSubmit: () => void
   children: ReactNode
+  submitting?: boolean
 }
 
-export default function Modal({ title, onClose, onSubmit, children }: ModalProps) {
+export default function Modal({ title, onClose, onSubmit, children, submitting }: ModalProps) {
   return (
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.dialog} onClick={(e) => e.stopPropagation()}>
@@ -26,8 +27,8 @@ export default function Modal({ title, onClose, onSubmit, children }: ModalProps
           <Button variant="ghost" onClick={onClose}>
             Annuler
           </Button>
-          <Button variant="primary" onClick={onSubmit}>
-            Enregistrer
+          <Button variant="primary" onClick={onSubmit} disabled={submitting}>
+            {submitting ? 'Enregistrement…' : 'Enregistrer'}
           </Button>
         </div>
       </div>

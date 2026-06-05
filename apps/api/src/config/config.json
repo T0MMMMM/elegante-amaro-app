@@ -1,7 +1,7 @@
 {
   "development": {
-    "username": "admin",
-    "password": "admin",
+    "username": "root",
+    "password": "root",
     "database": "elegante_amaro_db",
     "host": "127.0.0.1",
     "dialect": "mysql"

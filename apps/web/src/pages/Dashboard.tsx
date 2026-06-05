@@ -1,51 +1,29 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { theme } from '@elegante-amaro-app/shared/constants'
+import { commandsService }     from '../services/commands.service'
+import { commandItemsService } from '../services/commandItems.service'
+import { stateCommandsService } from '../services/stateCommands.service'
+import { tablesService }        from '../services/tables.service'
+import { itemsService }         from '../services/items.service'
+import type { StateCommand }    from '@elegante-amaro-app/shared/types'
 
-type OrderStatus = 'En attente' | 'En préparation' | 'Prêt' | 'Servi'
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-interface MockOrder {
+interface DashboardOrder {
   id: number
   table: number
-  status: OrderStatus
+  statusId: number
+  statusName: string
   items: string[]
-  minutesAgo: number
+  createdAt: Date
   total: number
 }
 
-const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
-  'En attente': 'En préparation',
-  'En préparation': 'Prêt',
-  'Prêt': 'Servi',
-}
-const ACTION_LABEL: Partial<Record<OrderStatus, string>> = {
-  'En attente': 'Préparer',
-  'En préparation': 'Marquer prêt',
-  'Prêt': 'Servir',
-}
-const ACTIVE_STATUSES: OrderStatus[] = ['En attente', 'En préparation', 'Prêt']
+// ─── Utils ────────────────────────────────────────────────────────────────────
 
-const INITIAL_ORDERS: MockOrder[] = [
-  // — Actives —
-  { id: 1,  table: 3,  status: 'En attente',     items: ['Café allongé', 'Expresso', 'Croissant amande'], minutesAgo: 3,   total: 14.50 },
-  { id: 2,  table: 7,  status: 'En attente',     items: ['Thé vert', 'Madeleine × 2'],                   minutesAgo: 9,   total: 9.00  },
-  { id: 3,  table: 2,  status: 'En attente',     items: ['Latte', 'Tiramisu'],                            minutesAgo: 14,  total: 13.00 },
-  { id: 4,  table: 12, status: 'En attente',     items: ['Chocolat chaud'],                               minutesAgo: 22,  total: 5.50  },
-  { id: 5,  table: 5,  status: 'En préparation', items: ['Americano × 2', 'Financier'],                  minutesAgo: 4,   total: 11.00 },
-  { id: 6,  table: 1,  status: 'En préparation', items: ['Cappuccino', 'Pain au chocolat'],               minutesAgo: 7,   total: 10.50 },
-  { id: 7,  table: 9,  status: 'En préparation', items: ['Chocolat chaud × 3', 'Tarte citron'],          minutesAgo: 11,  total: 22.00 },
-  { id: 8,  table: 4,  status: 'Prêt',           items: ['Noisette', 'Cookie'],                          minutesAgo: 15,  total: 7.50  },
-  { id: 9,  table: 6,  status: 'Prêt',           items: ['Thé Earl Grey', 'Éclair chocolat'],            minutesAgo: 18,  total: 9.50  },
-  { id: 10, table: 11, status: 'Prêt',           items: ['Cappuccino × 2', 'Viennoiserie'],              minutesAgo: 23,  total: 16.00 },
-  // — Historique du jour —
-  { id: 11, table: 8,  status: 'Servi',          items: ['Expresso × 2'],                                minutesAgo: 31,  total: 6.00  },
-  { id: 12, table: 3,  status: 'Servi',          items: ['Latte', 'Croissant beurre'],                   minutesAgo: 44,  total: 11.50 },
-  { id: 13, table: 10, status: 'Servi',          items: ['Thé vert', 'Tarte aux pommes'],                minutesAgo: 58,  total: 12.00 },
-  { id: 14, table: 2,  status: 'Servi',          items: ['Cappuccino × 3'],                              minutesAgo: 72,  total: 13.50 },
-  { id: 15, table: 6,  status: 'Servi',          items: ['Chocolat chaud', 'Cookie × 2'],                minutesAgo: 89,  total: 9.00  },
-  { id: 16, table: 5,  status: 'Servi',          items: ['Café crème', 'Madeleine'],                     minutesAgo: 103, total: 8.50  },
-  { id: 17, table: 13, status: 'Servi',          items: ['Americano', 'Pain au raisin'],                 minutesAgo: 118, total: 7.50  },
-  { id: 18, table: 1,  status: 'Servi',          items: ['Thé Earl Grey × 2', 'Financier × 2'],         minutesAgo: 135, total: 15.00 },
-]
+function elapsed(createdAt: Date, now: Date) {
+  return Math.max(0, Math.floor((now.getTime() - createdAt.getTime()) / 60_000))
+}
 
 function greeting(h: number) {
   if (h < 12) return 'Bonjour'
@@ -53,25 +31,22 @@ function greeting(h: number) {
   return 'Bonsoir'
 }
 
-function servedTime(minutesAgo: number) {
-  return new Date(Date.now() - minutesAgo * 60_000)
-    .toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+function servedAt(createdAt: Date) {
+  return createdAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 }
 
-// ─── Stat block (active operations) ────────────────────────────────────────
+const today = () => new Date().toDateString()
+
+// ─── Stat blocks ─────────────────────────────────────────────────────────────
 
 function StatBlock({ value, label, dim }: { value: number; label: string; dim?: boolean }) {
   return (
     <div style={styles.statBlock}>
-      <span style={{ ...styles.statValue, opacity: dim && value === 0 ? 0.22 : 1 }}>
-        {value}
-      </span>
+      <span style={{ ...styles.statValue, opacity: dim && value === 0 ? 0.22 : 1 }}>{value}</span>
       <span style={styles.statLabel}>{label}</span>
     </div>
   )
 }
-
-// ─── Stat block (day summary) ───────────────────────────────────────────────
 
 function DayStat({ value, label }: { value: string; label: string }) {
   return (
@@ -82,15 +57,24 @@ function DayStat({ value, label }: { value: string; label: string }) {
   )
 }
 
-// ─── Active order row ───────────────────────────────────────────────────────
+// ─── Active order row ─────────────────────────────────────────────────────────
 
-function OrderRow({ order, onAdvance }: { order: MockOrder; onAdvance: (id: number) => void }) {
-  const [hov, setHov] = useState(false)
+function OrderRow({
+  order, now, nextState, onAdvance,
+}: {
+  order: DashboardOrder
+  now: Date
+  nextState: StateCommand | null
+  onAdvance: (id: number, nextStateId: number) => void
+}) {
+  const [hov, setHov]       = useState(false)
   const [btnHov, setBtnHov] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  const isLate    = order.minutesAgo >= 15
-  const isWarning = order.minutesAgo >= 8
-  const isReady   = order.status === 'Prêt'
+  const min       = elapsed(order.createdAt, now)
+  const isLate    = min >= 15
+  const isWarning = min >= 8
+  const isReady   = !nextState
 
   const timeColor = isLate    ? theme.colors.onPrimary
                   : isWarning ? theme.colors.accent
@@ -100,7 +84,11 @@ function OrderRow({ order, onAdvance }: { order: MockOrder; onAdvance: (id: numb
                     : isLate  ? theme.colors.accent
                     :           'transparent'
 
-  const nextLabel = ACTION_LABEL[order.status]
+  const handleAdvance = async () => {
+    if (!nextState || saving) return
+    setSaving(true)
+    try { await onAdvance(order.id, nextState.id) } finally { setSaving(false) }
+  }
 
   return (
     <div
@@ -116,88 +104,156 @@ function OrderRow({ order, onAdvance }: { order: MockOrder; onAdvance: (id: numb
       onMouseLeave={() => setHov(false)}
     >
       <span style={styles.tableNum}>T.{String(order.table).padStart(2, '0')}</span>
-      <span style={styles.items}>{order.items.join(' · ')}</span>
-      <span style={{ ...styles.time, color: timeColor, fontWeight: isLate ? 600 : 400 }}>
-        {order.minutesAgo === 0 ? "À l'instant" : `${order.minutesAgo} min`}
+      <span style={styles.items}>
+        {order.items.length > 0 ? order.items.join(' · ') : <em>Aucun article</em>}
       </span>
-      <span style={styles.total}>{order.total.toFixed(2)} €</span>
-      {nextLabel && (
+      <span style={{ ...styles.time, color: timeColor, fontWeight: isLate ? 600 : 400 }}>
+        {min === 0 ? "À l'instant" : `${min} min`}
+      </span>
+      <span style={styles.total}>{Number(order.total).toFixed(2)} €</span>
+      {nextState && (
         <button
-          onClick={() => onAdvance(order.id)}
+          onClick={handleAdvance}
+          disabled={saving}
           onMouseEnter={() => setBtnHov(true)}
           onMouseLeave={() => setBtnHov(false)}
           style={{
             fontFamily: theme.fonts.ui, fontSize: 12, fontWeight: 600,
             letterSpacing: '0.1em', textTransform: 'uppercase',
-            padding: '10px 20px', borderRadius: 3, cursor: 'pointer',
+            padding: '10px 20px', borderRadius: 3, cursor: saving ? 'wait' : 'pointer',
             whiteSpace: 'nowrap', transition: 'background 0.15s, color 0.15s',
-            ...(isReady ? {
-              border: `1.5px solid ${theme.colors.onPrimary}`,
-              backgroundColor: theme.colors.onPrimary,
-              color: theme.colors.primary,
-            } : {
-              border: `1.5px solid ${theme.colors.accent}`,
-              backgroundColor: btnHov ? theme.colors.accent : 'transparent',
-              color: btnHov ? theme.colors.primary : theme.colors.accent,
-            }),
+            opacity: saving ? 0.6 : 1,
+            border: `1.5px solid ${theme.colors.accent}`,
+            backgroundColor: btnHov && !saving ? theme.colors.accent : 'transparent',
+            color: btnHov && !saving ? theme.colors.primary : theme.colors.accent,
           }}
         >
-          {nextLabel}
+          {saving ? '…' : nextState.state}
         </button>
       )}
     </div>
   )
 }
 
-// ─── History row ─────────────────────────────────────────────────────────────
+// ─── History row ──────────────────────────────────────────────────────────────
 
-function HistoryRow({ order }: { order: MockOrder }) {
+function HistoryRow({ order }: { order: DashboardOrder }) {
   return (
     <div style={styles.historyRow}>
-      <span style={styles.historyTime}>{servedTime(order.minutesAgo)}</span>
+      <span style={styles.historyTime}>{servedAt(order.createdAt)}</span>
       <span style={styles.historyTable}>T.{String(order.table).padStart(2, '0')}</span>
-      <span style={styles.historyItems}>{order.items.join(' · ')}</span>
-      <span style={styles.historyTotal}>{order.total.toFixed(2)} €</span>
+      <span style={styles.historyItems}>
+        {order.items.length > 0 ? order.items.join(' · ') : '—'}
+      </span>
+      <span style={styles.historyTotal}>{Number(order.total).toFixed(2)} €</span>
     </div>
   )
 }
 
-// ─── Dashboard ───────────────────────────────────────────────────────────────
+// ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
-  const [orders, setOrders] = useState<MockOrder[]>(INITIAL_ORDERS)
-  const [now, setNow] = useState(new Date())
+  const [orders, setOrders]   = useState<DashboardOrder[]>([])
+  const [states, setStates]   = useState<StateCommand[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState<string | null>(null)
+  const [now, setNow]         = useState(new Date())
 
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 30_000)
-    return () => clearInterval(t)
+  const load = useCallback(async () => {
+    try {
+      const [commands, stateCommands, tables, allCmdItems, allItems] = await Promise.all([
+        commandsService.getAll(),
+        stateCommandsService.getAll(),
+        tablesService.getAll(),
+        commandItemsService.getAll(),
+        itemsService.getAll(),
+      ])
+
+      const sorted = [...stateCommands].sort((a, b) => a.id - b.id)
+      setStates(sorted)
+
+      const enriched: DashboardOrder[] = commands.map(cmd => {
+        const state    = stateCommands.find(s => s.id === cmd.state_command_id)
+        const table    = tables.find(t => t.id === cmd.table_id)
+        const cmdItems = allCmdItems.filter(ci => ci.command_id === cmd.id)
+        const labels   = cmdItems.map(ci => {
+          const item = allItems.find(i => i.id === ci.item_id)
+          return ci.quantity > 1 ? `${item?.name ?? '?'} × ${ci.quantity}` : (item?.name ?? '?')
+        })
+        return {
+          id: cmd.id,
+          table: table?.numero ?? cmd.table_id,
+          statusId: cmd.state_command_id,
+          statusName: state?.state ?? `Statut #${cmd.state_command_id}`,
+          items: labels,
+          createdAt: new Date(cmd.created_at),
+          total: cmd.total_price,
+        }
+      })
+
+      setOrders(enriched)
+      setError(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erreur de chargement')
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
-  const advance = (id: number) => {
+  // Tick clock + refresh orders every 60 s
+  useEffect(() => {
+    load()
+    const tick = setInterval(() => {
+      setNow(new Date())
+      load()
+    }, 60_000)
+    return () => clearInterval(tick)
+  }, [load])
+
+  const advance = async (orderId: number, nextStateId: number) => {
+    await commandsService.update(orderId, { state_command_id: nextStateId })
+    const nextState = states.find(s => s.id === nextStateId)
     setOrders(prev => prev.map(o =>
-      o.id === id && NEXT_STATUS[o.status]
-        ? { ...o, status: NEXT_STATUS[o.status]!, minutesAgo: 0 }
+      o.id === orderId
+        ? { ...o, statusId: nextStateId, statusName: nextState?.state ?? '' }
         : o
     ))
   }
 
-  const active  = orders.filter(o => ACTIVE_STATUSES.includes(o.status))
-  const served  = orders.filter(o => o.status === 'Servi')
-    .sort((a, b) => a.minutesAgo - b.minutesAgo)
+  // States: last by ID = terminal (served)
+  const lastState    = states[states.length - 1]
+  const activeStates = states.filter(s => s !== lastState)
+  const todayStr     = today()
+
+  const todayOrders  = orders.filter(o => o.createdAt.toDateString() === todayStr)
+  const activeOrders = todayOrders.filter(o => o.statusId !== lastState?.id)
+  const servedOrders = todayOrders.filter(o => o.statusId === lastState?.id)
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
 
   const counts = {
-    total:       active.length,
-    attente:     orders.filter(o => o.status === 'En attente').length,
-    preparation: orders.filter(o => o.status === 'En préparation').length,
-    pret:        orders.filter(o => o.status === 'Prêt').length,
+    total:  activeOrders.length,
+    ...Object.fromEntries(activeStates.map(s => [
+      s.id,
+      activeOrders.filter(o => o.statusId === s.id).length,
+    ])),
   }
 
-  const ca      = served.reduce((s, o) => s + o.total, 0)
-  const avg     = served.length > 0 ? ca / served.length : 0
-  const totalCmds = orders.length
-
+  const ca  = servedOrders.reduce((s, o) => s + Number(o.total), 0)
+  const avg = servedOrders.length > 0 ? ca / servedOrders.length : 0
   const fmt = (n: number) =>
     n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
+
+  if (loading) return (
+    <div style={styles.center}>
+      <span style={styles.loadingText}>Chargement des commandes…</span>
+    </div>
+  )
+
+  if (error) return (
+    <div style={styles.center}>
+      <span style={styles.errorText}>{error}</span>
+    </div>
+  )
 
   return (
     <div>
@@ -220,34 +276,48 @@ export default function Dashboard() {
 
       {/* ── Active stats ────────────────────────────────────── */}
       <div style={styles.statsRow}>
-        <StatBlock value={counts.total}       label="Actives"        />
-        <div style={styles.statSep} />
-        <StatBlock value={counts.attente}     label="En attente"  dim />
-        <div style={styles.statSep} />
-        <StatBlock value={counts.preparation} label="En préparation" dim />
-        <div style={styles.statSep} />
-        <StatBlock value={counts.pret}        label="Prêtes"      dim />
+        <StatBlock value={counts.total} label="Actives" />
+        {activeStates.map((s, i) => (
+          <>
+            <div key={`sep-${s.id}`} style={styles.statSep} />
+            <StatBlock
+              key={s.id}
+              value={(counts as Record<number, number>)[s.id] ?? 0}
+              label={s.state}
+              dim={i > 0}
+            />
+          </>
+        ))}
       </div>
 
       {/* ── Active orders ───────────────────────────────────── */}
-      {active.length === 0 ? (
+      {activeOrders.length === 0 ? (
         <div style={styles.empty}>
           <span style={styles.emptyTitle}>Tout est à jour</span>
           <span style={styles.emptySub}>Aucune commande active pour le moment</span>
         </div>
       ) : (
-        ACTIVE_STATUSES.map(status => {
-          const rows = orders.filter(o => o.status === status)
+        activeStates.map(state => {
+          const rows = activeOrders.filter(o => o.statusId === state.id)
           if (rows.length === 0) return null
+          const stateIdx = states.findIndex(s => s.id === state.id)
+          const nextState = states[stateIdx + 1] ?? null
+
           return (
-            <div key={status} style={styles.section}>
+            <div key={state.id} style={styles.section}>
               <div style={styles.sectionHeader}>
-                <span style={styles.sectionTitle}>{status}</span>
+                <span style={styles.sectionTitle}>{state.state}</span>
                 <div style={styles.sectionRule} />
                 <span style={styles.sectionCount}>{rows.length}</span>
               </div>
               {rows.map(order => (
-                <OrderRow key={order.id} order={order} onAdvance={advance} />
+                <OrderRow
+                  key={order.id}
+                  order={order}
+                  now={now}
+                  nextState={nextState}
+                  onAdvance={advance}
+                />
               ))}
             </div>
           )
@@ -258,23 +328,23 @@ export default function Dashboard() {
       <div style={styles.historySeparator} />
 
       <div style={styles.dayStatsRow}>
-        <DayStat value={fmt(ca)}          label="Chiffre d'affaires" />
+        <DayStat value={fmt(ca)}                   label="Chiffre d'affaires" />
         <div style={styles.statSep} />
-        <DayStat value={String(totalCmds)} label="Commandes du jour"  />
+        <DayStat value={String(todayOrders.length)} label="Commandes du jour"  />
         <div style={styles.statSep} />
-        <DayStat value={served.length > 0 ? fmt(avg) : '—'} label="Ticket moyen" />
+        <DayStat value={servedOrders.length > 0 ? fmt(avg) : '—'} label="Ticket moyen" />
         <div style={styles.statSep} />
-        <DayStat value={String(served.length)} label="Servies"        />
+        <DayStat value={String(servedOrders.length)} label={lastState?.state ?? 'Terminées'} />
       </div>
 
-      {served.length > 0 && (
+      {servedOrders.length > 0 && (
         <div style={{ marginTop: 32 }}>
           <div style={styles.sectionHeader}>
             <span style={styles.sectionTitle}>Historique du jour</span>
             <div style={styles.sectionRule} />
-            <span style={styles.sectionCount}>{served.length}</span>
+            <span style={styles.sectionCount}>{servedOrders.length}</span>
           </div>
-          {served.map(order => (
+          {servedOrders.map(order => (
             <HistoryRow key={order.id} order={order} />
           ))}
         </div>
@@ -284,152 +354,51 @@ export default function Dashboard() {
   )
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles: Record<string, React.CSSProperties> = {
-  header: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-    marginBottom: 52,
-  },
-  greetingText: {
-    fontFamily: theme.fonts.title, fontSize: 72, color: theme.colors.onPrimary,
-    letterSpacing: '0.04em', lineHeight: 1, display: 'block',
-  },
-  headerSub: {
-    display: 'block', fontFamily: theme.fonts.ui, fontSize: 13, fontWeight: 500,
-    color: theme.colors.muted, letterSpacing: '0.12em',
-    textTransform: 'uppercase', marginTop: 12,
-  },
-  clockBlock: {
-    display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8,
-  },
-  clockTime: {
-    fontFamily: theme.fonts.title, fontSize: 68, color: theme.colors.onPrimary,
-    letterSpacing: '0.04em', lineHeight: 1,
-  },
-  clockDate: {
-    fontFamily: theme.fonts.ui, fontSize: 13, fontWeight: 500,
-    color: theme.colors.muted, letterSpacing: '0.08em', textTransform: 'capitalize',
-  },
+  center:      { display: 'flex', justifyContent: 'center', paddingTop: 80 },
+  loadingText: { fontFamily: theme.fonts.ui, fontSize: 13, color: theme.colors.muted, letterSpacing: '0.1em', textTransform: 'uppercase' },
+  errorText:   { fontFamily: theme.fonts.ui, fontSize: 13, color: theme.colors.danger },
 
-  // Active stats
-  statsRow: {
-    display: 'flex', alignItems: 'center',
-    paddingBottom: 48, marginBottom: 48,
-    borderBottom: `1px solid rgba(42,31,21,0.08)`,
-  },
-  statBlock: {
-    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-  },
-  statValue: {
-    fontFamily: theme.fonts.title, fontSize: 80, lineHeight: 1,
-    color: theme.colors.onPrimary, letterSpacing: '0.02em',
-  },
-  statLabel: {
-    fontFamily: theme.fonts.ui, fontSize: 12, fontWeight: 600,
-    letterSpacing: '0.14em', textTransform: 'uppercase', color: theme.colors.muted,
-  },
-  statSep: {
-    width: 1, height: 56, backgroundColor: 'rgba(42,31,21,0.08)',
-  },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 52 },
+  greetingText: { fontFamily: theme.fonts.title, fontSize: 72, color: theme.colors.onPrimary, letterSpacing: '0.04em', lineHeight: 1, display: 'block' },
+  headerSub:    { display: 'block', fontFamily: theme.fonts.ui, fontSize: 13, fontWeight: 500, color: theme.colors.muted, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 12 },
+  clockBlock:   { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 },
+  clockTime:    { fontFamily: theme.fonts.title, fontSize: 68, color: theme.colors.onPrimary, letterSpacing: '0.04em', lineHeight: 1 },
+  clockDate:    { fontFamily: theme.fonts.ui, fontSize: 13, fontWeight: 500, color: theme.colors.muted, letterSpacing: '0.08em', textTransform: 'capitalize' },
 
-  // Section headers
-  section: { marginBottom: 44 },
-  sectionHeader: {
-    display: 'flex', alignItems: 'center', gap: 16, marginBottom: 4,
-  },
-  sectionTitle: {
-    fontFamily: theme.fonts.ui, fontSize: 12, fontWeight: 700,
-    letterSpacing: '0.18em', textTransform: 'uppercase',
-    color: theme.colors.muted, whiteSpace: 'nowrap',
-  },
-  sectionRule: {
-    flex: 1, height: 1, backgroundColor: 'rgba(42,31,21,0.08)',
-  },
-  sectionCount: {
-    fontFamily: theme.fonts.ui, fontSize: 12, fontWeight: 600,
-    color: theme.colors.muted, letterSpacing: '0.08em',
-  },
+  statsRow:  { display: 'flex', alignItems: 'center', paddingBottom: 48, marginBottom: 48, borderBottom: `1px solid rgba(42,31,21,0.08)` },
+  statBlock: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
+  statValue: { fontFamily: theme.fonts.title, fontSize: 80, lineHeight: 1, color: theme.colors.onPrimary, letterSpacing: '0.02em' },
+  statLabel: { fontFamily: theme.fonts.ui, fontSize: 12, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: theme.colors.muted },
+  statSep:   { width: 1, height: 56, backgroundColor: 'rgba(42,31,21,0.08)' },
 
-  // Active order row
-  tableNum: {
-    fontFamily: theme.fonts.title, fontSize: 36, color: theme.colors.onPrimary,
-    letterSpacing: '0.04em', lineHeight: 1, minWidth: 80,
-  },
-  items: {
-    fontFamily: theme.fonts.body, fontSize: 16, fontWeight: 400,
-    color: theme.colors.muted, flex: 1,
-  },
-  time: {
-    fontFamily: theme.fonts.ui, fontSize: 14,
-    letterSpacing: '0.04em', minWidth: 80, textAlign: 'right',
-  },
-  total: {
-    fontFamily: theme.fonts.ui, fontSize: 15, fontWeight: 600,
-    color: theme.colors.onPrimary, letterSpacing: '0.04em',
-    minWidth: 80, textAlign: 'right',
-  },
+  section:       { marginBottom: 44 },
+  sectionHeader: { display: 'flex', alignItems: 'center', gap: 16, marginBottom: 4 },
+  sectionTitle:  { fontFamily: theme.fonts.ui, fontSize: 12, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: theme.colors.muted, whiteSpace: 'nowrap' },
+  sectionRule:   { flex: 1, height: 1, backgroundColor: 'rgba(42,31,21,0.08)' },
+  sectionCount:  { fontFamily: theme.fonts.ui, fontSize: 12, fontWeight: 600, color: theme.colors.muted, letterSpacing: '0.08em' },
 
-  // Separator between operations and history
-  historySeparator: {
-    height: 2,
-    backgroundColor: 'rgba(42,31,21,0.07)',
-    margin: '56px 0',
-    borderRadius: 1,
-  },
+  tableNum: { fontFamily: theme.fonts.title, fontSize: 36, color: theme.colors.onPrimary, letterSpacing: '0.04em', lineHeight: 1, minWidth: 80 },
+  items:    { fontFamily: theme.fonts.body, fontSize: 16, fontWeight: 400, color: theme.colors.muted, flex: 1 },
+  time:     { fontFamily: theme.fonts.ui, fontSize: 14, letterSpacing: '0.04em', minWidth: 80, textAlign: 'right' },
+  total:    { fontFamily: theme.fonts.ui, fontSize: 15, fontWeight: 600, color: theme.colors.onPrimary, letterSpacing: '0.04em', minWidth: 80, textAlign: 'right' },
 
-  // Day stats
-  dayStatsRow: {
-    display: 'flex', alignItems: 'center',
-    paddingBottom: 48, marginBottom: 8,
-  },
-  dayStatBlock: {
-    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-  },
-  dayStatValue: {
-    fontFamily: theme.fonts.title, fontSize: 48, lineHeight: 1,
-    color: theme.colors.onPrimary, letterSpacing: '0.03em',
-  },
-  dayStatLabel: {
-    fontFamily: theme.fonts.ui, fontSize: 12, fontWeight: 600,
-    letterSpacing: '0.14em', textTransform: 'uppercase', color: theme.colors.muted,
-  },
+  historySeparator: { height: 2, backgroundColor: 'rgba(42,31,21,0.07)', margin: '56px 0', borderRadius: 1 },
 
-  // History row
-  historyRow: {
-    display: 'flex', alignItems: 'center', gap: 20,
-    padding: '16px 0 16px 14px',
-    borderBottom: `1px solid rgba(42,31,21,0.04)`,
-    borderLeft: '3px solid transparent',
-    opacity: 0.6,
-  },
-  historyTime: {
-    fontFamily: theme.fonts.ui, fontSize: 13, color: theme.colors.muted,
-    letterSpacing: '0.04em', minWidth: 44,
-  },
-  historyTable: {
-    fontFamily: theme.fonts.title, fontSize: 28, color: theme.colors.onPrimary,
-    letterSpacing: '0.04em', lineHeight: 1, minWidth: 80,
-  },
-  historyItems: {
-    fontFamily: theme.fonts.body, fontSize: 15, color: theme.colors.muted, flex: 1,
-  },
-  historyTotal: {
-    fontFamily: theme.fonts.ui, fontSize: 14, fontWeight: 600,
-    color: theme.colors.onPrimary, minWidth: 80, textAlign: 'right',
-  },
+  dayStatsRow:  { display: 'flex', alignItems: 'center', paddingBottom: 48, marginBottom: 8 },
+  dayStatBlock: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
+  dayStatValue: { fontFamily: theme.fonts.title, fontSize: 48, lineHeight: 1, color: theme.colors.onPrimary, letterSpacing: '0.03em' },
+  dayStatLabel: { fontFamily: theme.fonts.ui, fontSize: 12, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: theme.colors.muted },
 
-  // Empty state
-  empty: {
-    display: 'flex', flexDirection: 'column', alignItems: 'center',
-    paddingTop: 80, gap: 14,
-  },
-  emptyTitle: {
-    fontFamily: theme.fonts.title, fontSize: 68,
-    color: theme.colors.accent, letterSpacing: '0.06em',
-  },
-  emptySub: {
-    fontFamily: theme.fonts.ui, fontSize: 13, color: theme.colors.muted,
-    letterSpacing: '0.1em', textTransform: 'uppercase',
-  },
+  historyRow:    { display: 'flex', alignItems: 'center', gap: 20, padding: '16px 0 16px 14px', borderBottom: `1px solid rgba(42,31,21,0.04)`, borderLeft: '3px solid transparent', opacity: 0.6 },
+  historyTime:   { fontFamily: theme.fonts.ui, fontSize: 13, color: theme.colors.muted, letterSpacing: '0.04em', minWidth: 44 },
+  historyTable:  { fontFamily: theme.fonts.title, fontSize: 28, color: theme.colors.onPrimary, letterSpacing: '0.04em', lineHeight: 1, minWidth: 80 },
+  historyItems:  { fontFamily: theme.fonts.body, fontSize: 15, color: theme.colors.muted, flex: 1 },
+  historyTotal:  { fontFamily: theme.fonts.ui, fontSize: 14, fontWeight: 600, color: theme.colors.onPrimary, minWidth: 80, textAlign: 'right' },
+
+  empty:     { display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 80, gap: 14 },
+  emptyTitle: { fontFamily: theme.fonts.title, fontSize: 68, color: theme.colors.accent, letterSpacing: '0.06em' },
+  emptySub:   { fontFamily: theme.fonts.ui, fontSize: 13, color: theme.colors.muted, letterSpacing: '0.1em', textTransform: 'uppercase' },
 }

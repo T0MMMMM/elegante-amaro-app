@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
-import { deleteTable, getTables } from '../api/tables'
+import { useState } from 'react'
+import { createTable, deleteTable, getTables, updateTable } from '../api/tables'
+import { useResource } from '../hooks/useResource'
 import DataTable, { Column } from '../components/ui/DataTable'
 import Modal, { Field, Input } from '../components/ui/Modal'
 import Button from '../components/ui/Button'
+import PageShell from '../components/ui/PageShell'
 import { theme } from '@elegante-amaro-app/shared/constants'
 import type { Table } from '@elegante-amaro-app/shared/types'
 
@@ -12,38 +14,37 @@ const columns: Column<Table>[] = [
 ]
 
 export default function Tables() {
-  const [data, setData] = useState<Table[]>([])
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editing, setEditing] = useState<Table | null>(null)
-  const [form, setForm] = useState({ numero: 0 })
+  const { data, loading, error, setData } = useResource(getTables)
+  const [modalOpen, setModalOpen]         = useState(false)
+  const [editing, setEditing]             = useState<Table | null>(null)
+  const [form, setForm]                   = useState({ numero: 0 })
+  const [saving, setSaving]               = useState(false)
 
-  useEffect(() => {
-    // TODO: handle loading/error states
-    getTables().then(setData)
-  }, [])
-
-  const openCreate = () => {
-    setEditing(null)
-    setForm({ numero: 0 })
-    setModalOpen(true)
-  }
-
-  const openEdit = (row: Table) => {
-    setEditing(row)
-    setForm({ numero: row.numero })
-    setModalOpen(true)
-  }
+  const openCreate = () => { setEditing(null); setForm({ numero: 0 }); setModalOpen(true) }
+  const openEdit   = (row: Table) => { setEditing(row); setForm({ numero: row.numero }); setModalOpen(true) }
 
   const handleDelete = async (row: Table) => {
     if (!confirm(`Supprimer la table #${row.numero} ?`)) return
-    // TODO: refresh list after delete
     await deleteTable(row.id)
-    setData((prev) => prev.filter((t) => t.id !== row.id))
+    setData(prev => prev.filter(t => t.id !== row.id))
   }
 
-  const handleSubmit = () => {
-    // TODO: call createTable / updateTable then refresh list
-    setModalOpen(false)
+  const handleSubmit = async () => {
+    setSaving(true)
+    try {
+      if (editing) {
+        const updated = await updateTable(editing.id, form)
+        setData(prev => prev.map(t => t.id === updated.id ? updated : t))
+      } else {
+        const created = await createTable(form)
+        setData(prev => [...prev, created])
+      }
+      setModalOpen(false)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Erreur lors de la sauvegarde')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -53,20 +54,19 @@ export default function Tables() {
         <Button onClick={openCreate}>+ Nouvelle</Button>
       </div>
 
-      <DataTable columns={columns} data={data} onEdit={openEdit} onDelete={handleDelete} />
+      <PageShell loading={loading} error={error}>
+        <DataTable columns={columns} data={data} onEdit={openEdit} onDelete={handleDelete} />
+      </PageShell>
 
       {modalOpen && (
         <Modal
           title={editing ? `Modifier table #${editing.numero}` : 'Nouvelle table'}
           onClose={() => setModalOpen(false)}
           onSubmit={handleSubmit}
+          submitting={saving}
         >
           <Field label="Numéro">
-            <Input
-              type="number"
-              value={form.numero}
-              onChange={(e) => setForm({ numero: Number(e.target.value) })}
-            />
+            <Input type="number" value={form.numero} onChange={e => setForm({ numero: Number(e.target.value) })} />
           </Field>
         </Modal>
       )}
@@ -75,6 +75,6 @@ export default function Tables() {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 },
-  pageTitle: { fontFamily: theme.fonts.body, fontSize: 32, fontWeight: 700, color: theme.colors.onPrimary },
+  header:    { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 },
+  pageTitle: { fontFamily: theme.fonts.title, fontSize: 40, color: theme.colors.onPrimary, letterSpacing: '0.04em' },
 }
