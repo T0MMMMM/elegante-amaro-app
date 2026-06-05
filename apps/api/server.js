@@ -1,4 +1,5 @@
 import { initDB } from "./src/config/database.js";
+import "./src/models/index.js";
 import express from "express";
 import routes from "./src/routes/routes.js";
 
