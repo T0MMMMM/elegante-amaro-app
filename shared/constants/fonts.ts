@@ -1,5 +1,5 @@
 export const fonts = {
-  title: "'Ballet', cursive",
-  body: "'EB Garamond', serif",
-  ui: "'Unbounded', sans-serif",
+  title: "'Bebas Neue', sans-serif",
+  body: "'Montserrat', sans-serif",
+  ui: "'Montserrat', sans-serif",
 } as const
