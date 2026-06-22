@@ -7,15 +7,29 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Ballet:opsz@16..72&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Unbounded&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       html, body, #root { height: 100%; }
-      body { font-family: 'EB Garamond', serif; background: #E8DCB5; color: #212121; }
+      body { font-family: 'Montserrat', sans-serif; background: #FFFAED; color: #2A1F15; }
+
+      * { scrollbar-width: thin; scrollbar-color: #BF9D7B transparent; }
+      *::-webkit-scrollbar { width: 6px; height: 6px; }
+      *::-webkit-scrollbar-track { background: transparent; }
+      *::-webkit-scrollbar-thumb { background: #BF9D7B; border-radius: 99px; }
+      *::-webkit-scrollbar-thumb:hover { background: #A8876A; }
+
+      @keyframes page-wipe {
+        0%   { transform: translateY(-100%); animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1); }
+        35%  { transform: translateY(0%);    animation-timing-function: linear; }
+        65%  { transform: translateY(0%);    animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1); }
+        100% { transform: translateY(100%); }
+      }
+      .page-wipe { animation: page-wipe 1s both; }
     </style>
-    <script type="module" crossorigin src="/assets/index-BE7G2RXR.js"></script>
+    <script type="module" crossorigin src="/assets/index-jfZsMXx9.js"></script>
   </head>
   <body>
     <div id="root"></div>

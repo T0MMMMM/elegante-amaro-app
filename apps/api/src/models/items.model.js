@@ -10,7 +10,9 @@ const Item = sequelize.define("Item", {
   category_id: { type: DataTypes.BIGINT, allowNull: true }
 }, {
   tableName: "items",
-  timestamps: false
+  timestamps: true,
+  createdAt: "created_at",
+  updatedAt: "updated_at"
 });
 
 export default Item;

@@ -1,20 +1,50 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createStateCommand, deleteStateCommand, getStateCommands, updateStateCommand } from '../api/stateCommands'
 import { useResource } from '../hooks/useResource'
-import DataTable, { Column } from '../components/ui/DataTable'
+import DataTable, { Column, SortDirection } from '../components/ui/DataTable'
 import Modal, { Field, Input } from '../components/ui/Modal'
 import Button from '../components/ui/Button'
 import PageShell from '../components/ui/PageShell'
 import { theme } from '@elegante-amaro-app/shared/constants'
 import type { StateCommand } from '@elegante-amaro-app/shared/types'
 
-const columns: Column<StateCommand>[] = [
-  { key: 'id', label: 'ID' },
-  { key: 'state', label: 'Statut' },
-]
+type SortKey = 'id' | 'state'
 
 export default function StateCommands() {
   const { data, loading, error, setData } = useResource(getStateCommands)
+
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey !== key) { setSortKey(key); setSortDir('asc'); return }
+    if (sortDir === 'asc') { setSortDir('desc'); return }
+    setSortKey(null)
+  }
+
+  const displayedData = useMemo(() => {
+    if (!sortKey) return data
+    return [...data].sort((a, b) => {
+      const cmp = sortKey === 'state' ? a.state.localeCompare(b.state) : a.id - b.id
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  }, [data, sortKey, sortDir])
+
+  const columns: Column<StateCommand>[] = useMemo(() => [
+    {
+      key: 'id', label: 'ID', width: 80,
+      sortable: true,
+      sortDirection: (sortKey === 'id' ? sortDir : null) as SortDirection,
+      onSortClick: () => toggleSort('id'),
+    },
+    {
+      key: 'state', label: 'Statut', width: '40%',
+      sortable: true,
+      sortDirection: (sortKey === 'state' ? sortDir : null) as SortDirection,
+      onSortClick: () => toggleSort('state'),
+    },
+  ], [sortKey, sortDir])
+
   const [modalOpen, setModalOpen]         = useState(false)
   const [editing, setEditing]             = useState<StateCommand | null>(null)
   const [form, setForm]                   = useState({ state: '' })
@@ -23,10 +53,16 @@ export default function StateCommands() {
   const openCreate = () => { setEditing(null); setForm({ state: '' }); setModalOpen(true) }
   const openEdit   = (row: StateCommand) => { setEditing(row); setForm({ state: row.state }); setModalOpen(true) }
 
-  const handleDelete = async (row: StateCommand) => {
-    if (!confirm(`Supprimer le statut "${row.state}" ?`)) return
-    await deleteStateCommand(row.id)
-    setData(prev => prev.filter(s => s.id !== row.id))
+  const handleDelete = async () => {
+    if (!editing) return
+    if (!confirm(`Supprimer le statut "${editing.state}" ?`)) return
+    try {
+      await deleteStateCommand(editing.id)
+      setData(prev => prev.filter(s => s.id !== editing.id))
+      setModalOpen(false)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Erreur lors de la suppression')
+    }
   }
 
   const handleSubmit = async () => {
@@ -55,7 +91,7 @@ export default function StateCommands() {
       </div>
 
       <PageShell loading={loading} error={error}>
-        <DataTable columns={columns} data={data} onEdit={openEdit} onDelete={handleDelete} />
+        <DataTable columns={columns} data={displayedData} onEdit={openEdit} size="half" />
       </PageShell>
 
       {modalOpen && (
@@ -64,6 +100,8 @@ export default function StateCommands() {
           onClose={() => setModalOpen(false)}
           onSubmit={handleSubmit}
           submitting={saving}
+          onDelete={editing ? handleDelete : undefined}
+          deleteLabel={editing ? `Supprimer le statut "${editing.state}"` : undefined}
         >
           <Field label="Statut">
             <Input value={form.state} onChange={e => setForm({ state: e.target.value })} />

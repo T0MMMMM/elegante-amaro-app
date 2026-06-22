@@ -25,6 +25,8 @@ export interface Item {
   price: number
   image: string
   category_id: number
+  created_at: string
+  updated_at: string
 }
 
 // ─── Item Options ─────────────────────────────────────────────────────────────

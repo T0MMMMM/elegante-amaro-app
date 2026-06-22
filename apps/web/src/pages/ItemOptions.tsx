@@ -1,21 +1,62 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { createItemOption, deleteItemOption, getItemOptions, updateItemOption } from '../api/itemOptions'
 import { useResource } from '../hooks/useResource'
-import DataTable, { Column } from '../components/ui/DataTable'
+import DataTable, { Column, SortDirection } from '../components/ui/DataTable'
 import Modal, { Field, Input } from '../components/ui/Modal'
 import Button from '../components/ui/Button'
 import PageShell from '../components/ui/PageShell'
 import { theme } from '@elegante-amaro-app/shared/constants'
 import type { ItemOption } from '@elegante-amaro-app/shared/types'
 
-const columns: Column<ItemOption>[] = [
-  { key: 'id', label: 'ID' },
-  { key: 'name', label: 'Nom' },
-  { key: 'extra_price', label: 'Prix supplémentaire', render: v => `${Number(v).toFixed(2)} €` },
-]
+type SortKey = 'id' | 'name' | 'extra_price'
 
 export default function ItemOptions() {
   const { data, loading, error, setData } = useResource(getItemOptions)
+
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey !== key) { setSortKey(key); setSortDir('asc'); return }
+    if (sortDir === 'asc') { setSortDir('desc'); return }
+    setSortKey(null)
+  }
+
+  const sortValue = (row: ItemOption, key: SortKey): number | string =>
+    key === 'name' ? row.name : Number(row[key])
+
+  const displayedData = useMemo(() => {
+    if (!sortKey) return data
+    return [...data].sort((a, b) => {
+      const va = sortValue(a, sortKey)
+      const vb = sortValue(b, sortKey)
+      const cmp = typeof va === 'string' ? va.localeCompare(vb as string) : (va as number) - (vb as number)
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  }, [data, sortKey, sortDir])
+
+  const columns: Column<ItemOption>[] = useMemo(() => [
+    {
+      key: 'id', label: 'ID', width: 80,
+      sortable: true,
+      sortDirection: (sortKey === 'id' ? sortDir : null) as SortDirection,
+      onSortClick: () => toggleSort('id'),
+    },
+    {
+      key: 'name', label: 'Nom', width: '40%',
+      sortable: true,
+      sortDirection: (sortKey === 'name' ? sortDir : null) as SortDirection,
+      onSortClick: () => toggleSort('name'),
+    },
+    {
+      key: 'extra_price', label: 'Prix supplémentaire', width: '30%',
+      render: v => `${Number(v).toFixed(2)} €`,
+      sortable: true,
+      sortDirection: (sortKey === 'extra_price' ? sortDir : null) as SortDirection,
+      onSortClick: () => toggleSort('extra_price'),
+    },
+  ], [sortKey, sortDir])
+
   const [modalOpen, setModalOpen]         = useState(false)
   const [editing, setEditing]             = useState<ItemOption | null>(null)
   const [form, setForm]                   = useState({ name: '', extra_price: 0 })
@@ -28,10 +69,16 @@ export default function ItemOptions() {
     setModalOpen(true)
   }
 
-  const handleDelete = async (row: ItemOption) => {
-    if (!confirm(`Supprimer "${row.name}" ?`)) return
-    await deleteItemOption(row.id)
-    setData(prev => prev.filter(o => o.id !== row.id))
+  const handleDelete = async () => {
+    if (!editing) return
+    if (!confirm(`Supprimer "${editing.name}" ?`)) return
+    try {
+      await deleteItemOption(editing.id)
+      setData(prev => prev.filter(o => o.id !== editing.id))
+      setModalOpen(false)
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Erreur lors de la suppression')
+    }
   }
 
   const handleSubmit = async () => {
@@ -60,7 +107,7 @@ export default function ItemOptions() {
       </div>
 
       <PageShell loading={loading} error={error}>
-        <DataTable columns={columns} data={data} onEdit={openEdit} onDelete={handleDelete} />
+        <DataTable columns={columns} data={displayedData} onEdit={openEdit} size="half" />
       </PageShell>
 
       {modalOpen && (
@@ -69,6 +116,8 @@ export default function ItemOptions() {
           onClose={() => setModalOpen(false)}
           onSubmit={handleSubmit}
           submitting={saving}
+          onDelete={editing ? handleDelete : undefined}
+          deleteLabel={editing ? `Supprimer "${editing.name}"` : undefined}
         >
           <Field label="Nom">
             <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />

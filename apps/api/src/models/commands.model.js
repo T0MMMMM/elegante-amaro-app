@@ -11,7 +11,9 @@ const Command = sequelize.define("Command", {
   table_id: { type: DataTypes.BIGINT, allowNull: true }
 }, {
   tableName: "commands",
-  timestamps: true
+  timestamps: true,
+  createdAt: "created_at",
+  updatedAt: "updated_at"
 });
 
 export default Command;
