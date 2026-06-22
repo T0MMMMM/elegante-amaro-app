@@ -7,7 +7,6 @@ import { getUsers }          from '../api/users'
 import { useResource }       from '../hooks/useResource'
 import DataTable, { Column } from '../components/ui/DataTable'
 import Modal, { Field, Select } from '../components/ui/Modal'
-import Button    from '../components/ui/Button'
 import PageShell from '../components/ui/PageShell'
 import { theme } from '@elegante-amaro-app/shared/constants'
 import type { Command, CommandType, StateCommand, Table, User } from '@elegante-amaro-app/shared/types'
@@ -43,7 +42,6 @@ export default function Commands() {
   const [form, setForm]           = useState(emptyForm)
   const [saving, setSaving]       = useState(false)
 
-  const openCreate = () => { setEditing(null); setForm(emptyForm); setModalOpen(true) }
   const openEdit   = (row: Command) => {
     setEditing(row)
     setForm({ user_id: row.user_id, table_id: row.table_id, type_id: row.type_id, state_command_id: row.state_command_id, tva_rate: row.tva_rate, total_price: row.total_price })
@@ -81,7 +79,6 @@ export default function Commands() {
     <div>
       <div style={styles.header}>
         <h1 style={styles.pageTitle}>Historique des commandes</h1>
-        <Button onClick={openCreate}>+ Nouvelle</Button>
       </div>
 
       <PageShell loading={loading} error={error}>

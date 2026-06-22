@@ -67,7 +67,7 @@ function ActionBtn({ label, onClick }: { label: string; onClick: () => void }) {
       onMouseLeave={() => setHov(false)}
       style={{
         flex: 1,
-        padding: '22px 0',
+        padding: '40px 0',
         fontFamily: theme.fonts.ui,
         fontSize: 13,
         fontWeight: 700,
@@ -388,10 +388,10 @@ const styles: Record<string, React.CSSProperties> = {
   root:   { height: '100%', display: 'flex', flexDirection: 'column' },
 
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexShrink: 0 },
-  greetingText: { fontFamily: theme.fonts.title, fontSize: 72, color: theme.colors.onPrimary, letterSpacing: '0.04em', lineHeight: 1, display: 'block' },
-  headerSub:    { display: 'block', fontFamily: theme.fonts.ui, fontSize: 13, fontWeight: 500, color: theme.colors.muted, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 12 },
-  clockBlock:   { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 },
-  clockTime:    { fontFamily: theme.fonts.title, fontSize: 68, color: theme.colors.onPrimary, letterSpacing: '0.04em', lineHeight: 1 },
+  greetingText: { fontFamily: theme.fonts.title, fontSize: 44, color: theme.colors.onPrimary, letterSpacing: '0.04em', lineHeight: 1, display: 'block' },
+  headerSub:    { display: 'block', fontFamily: theme.fonts.ui, fontSize: 12, fontWeight: 500, color: theme.colors.muted, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 10 },
+  clockBlock:   { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 },
+  clockTime:    { fontFamily: theme.fonts.title, fontSize: 42, color: theme.colors.onPrimary, letterSpacing: '0.04em', lineHeight: 1 },
   clockDate:    { fontFamily: theme.fonts.ui, fontSize: 13, fontWeight: 500, color: theme.colors.muted, letterSpacing: '0.08em', textTransform: 'capitalize' },
 
   statBlock: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
