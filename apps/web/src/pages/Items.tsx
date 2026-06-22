@@ -41,8 +41,12 @@ export default function Items() {
 
   const handleDelete = async (row: Item) => {
     if (!confirm(`Supprimer "${row.name}" ?`)) return
-    await deleteItem(row.id)
-    setData(prev => prev.filter(i => i.id !== row.id))
+    try {
+      await deleteItem(row.id)
+      setData(prev => prev.filter(i => i.id !== row.id))
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Erreur lors de la suppression')
+    }
   }
 
   const handleSubmit = async () => {

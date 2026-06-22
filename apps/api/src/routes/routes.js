@@ -15,9 +15,10 @@ const routes = express.Router();
 
 // Users
 routes.get("/users", usersCtrl.getUsers);
-routes.post("/users", usersCtrl.create);
-routes.put("/users/:id", usersCtrl.update);
-routes.delete("/users/:id", usersCtrl.remove);
+routes.get("/users/:id", usersCtrl.getUser);
+routes.post("/users", usersCtrl.createUserHandler);
+routes.put("/users/:id", usersCtrl.updateUserHandler);
+routes.delete("/users/:id", usersCtrl.deleteUserHandler);
 
 // Categories
 routes.get("/categories", categoriesCtrl.getAll);
