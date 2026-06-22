@@ -1,22 +1,23 @@
-import { NavLink } from 'react-router'
+import { useLocation, useNavigate } from 'react-router'
 import { theme } from '@elegante-amaro-app/shared/constants'
 
-export const NAV_WIDTH = 320  
+export const NAV_WIDTH = 320
 
 const links = [
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/users', label: 'Utilisateurs' },
-  { to: '/items', label: 'Articles' },
-  { to: '/categories', label: 'Catégories' },
-  { to: '/item-options', label: 'Options' },
-  { to: '/commands', label: 'Commandes' },
-  { to: '/tables', label: 'Tables' },
+  { to: '/dashboard',      label: 'Dashboard' },
+  { to: '/users',          label: 'Utilisateurs' },
+  { to: '/items',          label: 'Articles' },
+  { to: '/categories',     label: 'Catégories' },
+  { to: '/item-options',   label: 'Options' },
+  { to: '/commands',       label: 'Commandes' },
+  { to: '/tables',         label: 'Tables' },
   { to: '/state-commands', label: 'Statuts' },
 ]
 
 interface NavMenuProps {
   open: boolean
   onClose: () => void
+  onNavigate: (label: string) => void
 }
 
 function CloseIcon() {
@@ -38,10 +39,22 @@ function CloseIcon() {
   )
 }
 
-export default function NavMenu({ open, onClose }: NavMenuProps) {
+export default function NavMenu({ open, onClose, onNavigate }: NavMenuProps) {
+  const navigate      = useNavigate()
+  const { pathname }  = useLocation()
+
+  const handleLink = (to: string, label: string) => {
+    if (pathname === to) {
+      onClose()
+      return
+    }
+    onNavigate(label)                    // overlay démarre immédiatement
+    setTimeout(() => navigate(to), 350)  // navigue quand l'overlay couvre l'écran
+    setTimeout(onClose, 1000)            // ferme le menu en fin d'animation
+  }
+
   return (
     <div style={styles.panel}>
-      {/* Close button — top right of the menu */}
       <button
         onClick={onClose}
         style={{
@@ -63,31 +76,36 @@ export default function NavMenu({ open, onClose }: NavMenuProps) {
       </div>
 
       <nav style={styles.nav}>
-        {links.map(({ to, label }, i) => (
-          <NavLink
-            key={to}
-            to={to}
-            onClick={onClose}
-            style={({ isActive }) => ({
-              fontFamily: theme.fonts.title,
-              fontSize: 38,
-              letterSpacing: '0.04em',
-              lineHeight: 1.45,
-              textDecoration: 'none',
-              display: 'block',
-              color: isActive ? theme.colors.accent : theme.colors.onSecondary,
-              opacity: open ? 1 : 0,
-              transform: open ? 'translateX(0)' : 'translateX(24px)',
-              transition: [
-                'color 0.15s',
-                `opacity ${open ? `0.45s ${0.1 + i * 0.055}s` : '0.18s'}`,
-                `transform ${open ? `0.5s ${0.1 + i * 0.055}s` : '0.18s'} cubic-bezier(0.76, 0, 0.24, 1)`,
-              ].join(', '),
-            })}
-          >
-            {label}
-          </NavLink>
-        ))}
+        {links.map(({ to, label }, i) => {
+          const isActive = pathname === to
+          return (
+            <div
+              key={to}
+              role="link"
+              tabIndex={0}
+              onClick={() => handleLink(to, label)}
+              onKeyDown={e => e.key === 'Enter' && handleLink(to, label)}
+              style={{
+                fontFamily: theme.fonts.title,
+                fontSize: 38,
+                letterSpacing: '0.04em',
+                lineHeight: 1.45,
+                cursor: 'pointer',
+                userSelect: 'none',
+                color: isActive ? theme.colors.accent : theme.colors.onSecondary,
+                opacity: open ? 1 : 0,
+                transform: open ? 'translateX(0)' : 'translateX(24px)',
+                transition: [
+                  'color 0.15s',
+                  `opacity ${open ? `0.45s ${0.1 + i * 0.055}s` : '0.18s'}`,
+                  `transform ${open ? `0.5s ${0.1 + i * 0.055}s` : '0.18s'} cubic-bezier(0.76, 0, 0.24, 1)`,
+                ].join(', '),
+              }}
+            >
+              {label}
+            </div>
+          )
+        })}
       </nav>
 
       <div

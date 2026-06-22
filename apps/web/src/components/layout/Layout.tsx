@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Outlet, useLocation } from 'react-router'
+import { useCallback, useState } from 'react'
+import { Outlet } from 'react-router'
 import { theme } from '@elegante-amaro-app/shared/constants'
 import NavMenu, { NAV_WIDTH } from './NavMenu'
 
@@ -26,13 +26,20 @@ function HamburgerLines() {
 
 export default function Layout() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const { pathname } = useLocation()
+  const [wipe, setWipe]         = useState<{ label: string; rev: number } | null>(null)
+
+  const triggerWipe = useCallback((label: string) => {
+    setWipe(w => ({ label, rev: (w?.rev ?? 0) + 1 }))
+  }, [])
 
   return (
     <div style={styles.root}>
-      <NavMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <NavMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onNavigate={triggerWipe}
+      />
 
-      {/* Main content — slides left and scales down to reveal the dark background */}
       <div
         style={{
           ...styles.contentWrapper,
@@ -45,7 +52,6 @@ export default function Layout() {
             : 'none',
         }}
       >
-        {/* Hamburger — only visible when menu is closed */}
         <button
           onClick={() => setMenuOpen(true)}
           style={{
@@ -58,12 +64,18 @@ export default function Layout() {
           <HamburgerLines />
         </button>
 
-        {/* Scrim — clicking the shifted content closes the menu */}
         {menuOpen && (
           <div style={styles.scrim} onClick={() => setMenuOpen(false)} />
         )}
 
-        <main key={pathname} className="page-in" style={styles.content}>
+        {wipe && (
+          <div key={wipe.rev} className="page-wipe" style={styles.wipeOverlay}>
+            <span style={styles.wipeLabel}>{wipe.label}</span>
+            <div style={styles.wipeLine} />
+          </div>
+        )}
+
+        <main style={styles.content}>
           <Outlet />
         </main>
       </div>
@@ -118,5 +130,31 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1,
     overflowY: 'auto',
     padding: '48px 96px 48px 56px',
+  },
+  wipeOverlay: {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 50,
+    backgroundColor: theme.colors.primary,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    pointerEvents: 'none',
+  },
+  wipeLabel: {
+    fontFamily: theme.fonts.title,
+    fontSize: 96,
+    color: theme.colors.onPrimary,
+    letterSpacing: '0.06em',
+    lineHeight: 1,
+  },
+  wipeLine: {
+    width: 48,
+    height: 2,
+    backgroundColor: theme.colors.accent,
+    borderRadius: 1,
+    opacity: 0.5,
   },
 }
