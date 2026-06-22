@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { theme } from '@elegante-amaro-app/shared/constants'
 import { commandsService }     from '../services/commands.service'
 import { commandItemsService } from '../services/commandItems.service'
@@ -54,6 +55,35 @@ function DayStat({ value, label }: { value: string; label: string }) {
       <span style={styles.dayStatValue}>{value}</span>
       <span style={styles.dayStatLabel}>{label}</span>
     </div>
+  )
+}
+
+function ActionBtn({ label, onClick }: { label: string; onClick: () => void }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        flex: 1,
+        padding: '22px 0',
+        fontFamily: theme.fonts.ui,
+        fontSize: 13,
+        fontWeight: 700,
+        letterSpacing: '0.14em',
+        textTransform: 'uppercase',
+        border: 'none',
+        borderRadius: 4,
+        cursor: 'pointer',
+        transition: 'background 0.15s, opacity 0.15s',
+        backgroundColor: hov ? theme.colors.secondary : theme.colors.accent,
+        color: theme.colors.onSecondary,
+        opacity: hov ? 0.88 : 1,
+      }}
+    >
+      {label}
+    </button>
   )
 }
 
@@ -153,6 +183,7 @@ function HistoryRow({ order }: { order: DashboardOrder }) {
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const [orders, setOrders]   = useState<DashboardOrder[]>([])
   const [states, setStates]   = useState<StateCommand[]>([])
   const [loading, setLoading] = useState(true)
@@ -321,6 +352,12 @@ export default function Dashboard() {
         })
       )}
 
+      {/* ── Actions ────────────────────────────────────────── */}
+      <div style={styles.actionsRow}>
+        <ActionBtn label="Créer une commande" onClick={() => navigate('/new-command')} />
+        <ActionBtn label="Historique des commandes" onClick={() => navigate('/commands')} />
+      </div>
+
       {/* ── Day stats + history ─────────────────────────────── */}
       <div style={styles.historySeparator} />
 
@@ -371,6 +408,8 @@ const styles: Record<string, React.CSSProperties> = {
   items:    { fontFamily: theme.fonts.body, fontSize: 16, fontWeight: 400, color: theme.colors.muted, flex: 1 },
   time:     { fontFamily: theme.fonts.ui, fontSize: 14, letterSpacing: '0.04em', minWidth: 80, textAlign: 'right' },
   total:    { fontFamily: theme.fonts.ui, fontSize: 15, fontWeight: 600, color: theme.colors.onPrimary, letterSpacing: '0.04em', minWidth: 80, textAlign: 'right' },
+
+  actionsRow: { display: 'flex', gap: 16, marginTop: 48, marginBottom: 8 },
 
   historySeparator: { height: 2, backgroundColor: 'rgba(42,31,21,0.07)', margin: '56px 0', borderRadius: 1 },
 
