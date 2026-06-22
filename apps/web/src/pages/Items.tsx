@@ -4,15 +4,18 @@ import { getCategories } from '../api/categories'
 import { getItemOptions } from '../api/itemOptions'
 import { createItemItemOption, deleteItemItemOption, getItemsItemOptions } from '../api/itemsItemOptions'
 import { useResource }   from '../hooks/useResource'
-import DataTable, { Column } from '../components/ui/DataTable'
+import DataTable, { Column, SortDirection } from '../components/ui/DataTable'
 import Modal, { Field, Input, Select } from '../components/ui/Modal'
 import MultiSelect from '../components/ui/MultiSelect'
 import Button    from '../components/ui/Button'
 import PageShell from '../components/ui/PageShell'
+import { renderDate } from '../utils/formatDate'
 import { theme } from '@elegante-amaro-app/shared/constants'
 import type { Category, Item, ItemOption, ItemItemOption } from '@elegante-amaro-app/shared/types'
 
 const emptyForm = { name: '', slug: '', price: 0, image: '', category_id: 0 }
+
+type SortKey = 'id' | 'name' | 'price' | 'created_at' | 'updated_at'
 
 const DIACRITICS_RANGE = new RegExp(`[${String.fromCharCode(0x0300)}-${String.fromCharCode(0x036f)}]`, 'g')
 
@@ -37,13 +40,73 @@ export default function Items() {
     getItemsItemOptions().then(setOptionLinks).catch(() => {})
   }, [])
 
+  const [categoryFilter, setCategoryFilter] = useState<number[]>([])
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey !== key) { setSortKey(key); setSortDir('asc'); return }
+    if (sortDir === 'asc') { setSortDir('desc'); return }
+    setSortKey(null)
+  }
+
+  const sortValue = (row: Item, key: SortKey): number | string => {
+    switch (key) {
+      case 'id':         return row.id
+      case 'name':       return row.name
+      case 'price':      return Number(row.price)
+      case 'created_at': return new Date(row.created_at).getTime()
+      case 'updated_at': return new Date(row.updated_at).getTime()
+    }
+  }
+
+  const displayedData = useMemo(() => {
+    let rows = data
+    if (categoryFilter.length) rows = rows.filter(i => categoryFilter.includes(i.category_id))
+
+    if (sortKey) {
+      rows = [...rows].sort((a, b) => {
+        const va = sortValue(a, sortKey)
+        const vb = sortValue(b, sortKey)
+        const cmp = typeof va === 'string' ? va.localeCompare(vb as string) : (va as number) - (vb as number)
+        return sortDir === 'asc' ? cmp : -cmp
+      })
+    }
+
+    return rows
+  }, [data, categoryFilter, sortKey, sortDir])
+
   const columns: Column<Item>[] = useMemo(() => [
-    { key: 'id',    label: 'ID' },
-    { key: 'name',  label: 'Nom' },
-    { key: 'slug',  label: 'Slug' },
-    { key: 'price', label: 'Prix', render: v => `${Number(v).toFixed(2)} €` },
-    { key: 'category_id', label: 'Catégorie', render: v => categories.find(c => c.id === v)?.name ?? String(v) },
-    { key: 'id', label: 'Options', render: (_v, row) => {
+    {
+      key: 'id', label: 'ID', width: 50,
+      sortable: true,
+      sortDirection: (sortKey === 'id' ? sortDir : null) as SortDirection,
+      onSortClick: () => toggleSort('id'),
+    },
+    {
+      key: 'name', label: 'Nom', width: '20%',
+      sortable: true,
+      sortDirection: (sortKey === 'name' ? sortDir : null) as SortDirection,
+      onSortClick: () => toggleSort('name'),
+    },
+    { key: 'slug', label: 'Slug', width: '16%' },
+    {
+      key: 'price', label: 'Prix', width: 90,
+      render: v => `${Number(v).toFixed(2)} €`,
+      sortable: true,
+      sortDirection: (sortKey === 'price' ? sortDir : null) as SortDirection,
+      onSortClick: () => toggleSort('price'),
+    },
+    {
+      key: 'category_id', label: 'Catégorie', width: '14%',
+      render: v => categories.find(c => c.id === v)?.name ?? String(v),
+      filter: {
+        options: categories.map(c => ({ value: c.id, label: c.name })),
+        selected: categoryFilter,
+        onChange: values => setCategoryFilter(values as number[]),
+      },
+    },
+    { key: 'id', label: 'Options', width: '20%', render: (_v, row) => {
         const names = optionLinks
           .filter(l => l.item_id === row.id)
           .map(l => itemOptions.find(o => o.id === l.item_option_id)?.name)
@@ -51,9 +114,21 @@ export default function Items() {
         return names.length ? names.join(', ') : '—'
       }
     },
-    { key: 'created_at', label: 'Créé le',    render: v => v ? new Date(String(v)).toLocaleString('fr-FR') : '—' },
-    { key: 'updated_at', label: 'Modifié le', render: v => v ? new Date(String(v)).toLocaleString('fr-FR') : '—' },
-  ], [categories, itemOptions, optionLinks])
+    {
+      key: 'created_at', label: 'Créé le', width: 90,
+      render: renderDate,
+      sortable: true,
+      sortDirection: (sortKey === 'created_at' ? sortDir : null) as SortDirection,
+      onSortClick: () => toggleSort('created_at'),
+    },
+    {
+      key: 'updated_at', label: 'Modifié le', width: 90,
+      render: renderDate,
+      sortable: true,
+      sortDirection: (sortKey === 'updated_at' ? sortDir : null) as SortDirection,
+      onSortClick: () => toggleSort('updated_at'),
+    },
+  ], [categories, itemOptions, optionLinks, categoryFilter, sortKey, sortDir])
 
   const [modalOpen, setModalOpen]             = useState(false)
   const [editing, setEditing]                 = useState<Item | null>(null)
@@ -78,11 +153,13 @@ export default function Items() {
     setModalOpen(true)
   }
 
-  const handleDelete = async (row: Item) => {
-    if (!confirm(`Supprimer "${row.name}" ?`)) return
+  const handleDelete = async () => {
+    if (!editing) return
+    if (!confirm(`Supprimer "${editing.name}" ?`)) return
     try {
-      await deleteItem(row.id)
-      setData(prev => prev.filter(i => i.id !== row.id))
+      await deleteItem(editing.id)
+      setData(prev => prev.filter(i => i.id !== editing.id))
+      setModalOpen(false)
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Erreur lors de la suppression')
     }
@@ -130,7 +207,7 @@ export default function Items() {
       </div>
 
       <PageShell loading={loading} error={error}>
-        <DataTable columns={columns} data={data} onEdit={openEdit} onDelete={handleDelete} />
+        <DataTable columns={columns} data={displayedData} onEdit={openEdit} />
       </PageShell>
 
       {modalOpen && (
@@ -139,6 +216,8 @@ export default function Items() {
           onClose={() => setModalOpen(false)}
           onSubmit={handleSubmit}
           submitting={saving}
+          onDelete={editing ? handleDelete : undefined}
+          deleteLabel={editing ? `Supprimer "${editing.name}"` : undefined}
         >
           <Field label="Nom">
             <Input

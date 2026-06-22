@@ -8,9 +8,11 @@ interface ModalProps {
   onSubmit: () => void
   children: ReactNode
   submitting?: boolean
+  onDelete?: () => void
+  deleteLabel?: string
 }
 
-export default function Modal({ title, onClose, onSubmit, children, submitting }: ModalProps) {
+export default function Modal({ title, onClose, onSubmit, children, submitting, onDelete, deleteLabel = 'Supprimer' }: ModalProps) {
   return (
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.dialog} onClick={(e) => e.stopPropagation()}>
@@ -31,6 +33,14 @@ export default function Modal({ title, onClose, onSubmit, children, submitting }
             {submitting ? 'Enregistrement…' : 'Enregistrer'}
           </Button>
         </div>
+
+        {onDelete && (
+          <div style={styles.dangerZone}>
+            <Button variant="danger" onClick={onDelete}>
+              {deleteLabel}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -103,6 +113,12 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: 10,
+    padding: '16px 24px 20px',
+    borderTop: `1px solid ${theme.colors.border}`,
+  },
+  dangerZone: {
+    display: 'flex',
+    justifyContent: 'center',
     padding: '16px 24px 20px',
     borderTop: `1px solid ${theme.colors.border}`,
   },
