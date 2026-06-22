@@ -15,6 +15,9 @@ const routes = express.Router();
 
 // Users
 routes.get("/users", usersCtrl.getUsers);
+routes.post("/users", usersCtrl.create);
+routes.put("/users/:id", usersCtrl.update);
+routes.delete("/users/:id", usersCtrl.remove);
 
 // Categories
 routes.get("/categories", categoriesCtrl.getAll);
