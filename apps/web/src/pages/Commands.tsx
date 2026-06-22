@@ -34,7 +34,8 @@ export default function Commands() {
     { key: 'state_command_id', label: 'Statut',      render: v => stateCommands.find(s => s.id === v)?.state ?? String(v) },
     { key: 'type_id',          label: 'Type',        render: v => commandTypes.find(c => c.id === v)?.name   ?? String(v) },
     { key: 'total_price', label: 'Total',    render: v => `${Number(v).toFixed(2)} €` },
-    { key: 'created_at',  label: 'Créée le', render: v => new Date(String(v)).toLocaleDateString('fr-FR') },
+    { key: 'created_at',  label: 'Créée le',    render: v => v ? new Date(String(v)).toLocaleString('fr-FR') : '—' },
+    { key: 'updated_at',  label: 'Modifiée le', render: v => v ? new Date(String(v)).toLocaleString('fr-FR') : '—' },
   ], [tables, users, stateCommands, commandTypes])
 
   const [modalOpen, setModalOpen] = useState(false)

@@ -25,8 +25,8 @@ export default function DataTable<T extends { id: number }>({
       <table style={styles.table}>
         <thead>
           <tr>
-            {columns.map((col) => (
-              <th key={String(col.key)} style={styles.th}>
+            {columns.map((col, i) => (
+              <th key={`${String(col.key)}-${i}`} style={styles.th}>
                 {col.label}
               </th>
             ))}
@@ -43,8 +43,8 @@ export default function DataTable<T extends { id: number }>({
           ) : (
             data.map((row) => (
               <tr key={row.id} style={styles.tr}>
-                {columns.map((col) => (
-                  <td key={String(col.key)} style={styles.td}>
+                {columns.map((col, i) => (
+                  <td key={`${String(col.key)}-${i}`} style={styles.td}>
                     {col.render
                       ? col.render(row[col.key], row)
                       : String(row[col.key] ?? '')}
