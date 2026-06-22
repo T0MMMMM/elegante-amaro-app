@@ -74,7 +74,7 @@ function ActionBtn({ label, onClick }: { label: string; onClick: () => void }) {
         letterSpacing: '0.14em',
         textTransform: 'uppercase',
         border: 'none',
-        borderRadius: 4,
+        borderRadius: 0,
         cursor: 'pointer',
         transition: 'background 0.15s, opacity 0.15s',
         backgroundColor: hov ? theme.colors.secondary : theme.colors.accent,
@@ -287,7 +287,7 @@ export default function Dashboard() {
   )
 
   return (
-    <div>
+    <div style={styles.root}>
 
       {/* ── Header ──────────────────────────────────────────── */}
       <div style={styles.header}>
@@ -305,8 +305,66 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── 4 stat blocks ──────────────────────────────────── */}
-      <div style={styles.statsRow}>
+      {/* ── Top action bar — full width, glued, flush to edges ── */}
+      <div style={styles.actionsRow}>
+        <ActionBtn label="Créer une commande" onClick={() => navigate('/new-command')} />
+        <div style={styles.btnDivider} />
+        <ActionBtn label="Historique des commandes" onClick={() => navigate('/commands')} />
+      </div>
+
+      {/* ── Scrollable orders ───────────────────────────────── */}
+      <div style={styles.scrollArea}>
+        {activeOrders.length === 0 ? (
+          <div style={styles.empty}>
+            <span style={styles.emptyTitle}>Tout est à jour</span>
+            <span style={styles.emptySub}>Aucune commande active pour le moment</span>
+          </div>
+        ) : (
+          displayStates.map(state => {
+            const rows = activeOrders.filter(o => o.statusId === state.id)
+            if (rows.length === 0) return null
+            const stateIdx = displayStates.findIndex(s => s.id === state.id)
+            const nextState = displayStates[stateIdx + 1]
+              ?? states.find(s => s.state === 'livrée')
+              ?? null
+
+            return (
+              <div key={state.id} style={styles.section}>
+                <div style={styles.sectionHeader}>
+                  <span style={styles.sectionTitle}>{state.state}</span>
+                  <div style={styles.sectionRule} />
+                  <span style={styles.sectionCount}>{rows.length}</span>
+                </div>
+                {rows.map(order => (
+                  <OrderRow
+                    key={order.id}
+                    order={order}
+                    now={now}
+                    nextState={nextState}
+                    onAdvance={advance}
+                  />
+                ))}
+              </div>
+            )
+          })
+        )}
+
+        {servedOrders.length > 0 && (
+          <div style={{ marginTop: 32 }}>
+            <div style={styles.sectionHeader}>
+              <span style={styles.sectionTitle}>Historique du jour</span>
+              <div style={styles.sectionRule} />
+              <span style={styles.sectionCount}>{servedOrders.length}</span>
+            </div>
+            {servedOrders.map(order => (
+              <HistoryRow key={order.id} order={order} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Stats — moved to bottom ─────────────────────────── */}
+      <div style={styles.statsRowBottom}>
         <StatBlock value={countActive}  label="Actives" />
         <div style={styles.statSep} />
         <StatBlock value={countPending} label="En attente" dim />
@@ -315,64 +373,6 @@ export default function Dashboard() {
         <div style={styles.statSep} />
         <StatBlock value={countReady}   label="Prêtes" dim />
       </div>
-
-      {/* ── Active orders ───────────────────────────────────── */}
-      {activeOrders.length === 0 ? (
-        <div style={styles.empty}>
-          <span style={styles.emptyTitle}>Tout est à jour</span>
-          <span style={styles.emptySub}>Aucune commande active pour le moment</span>
-        </div>
-      ) : (
-        displayStates.map(state => {
-          const rows = activeOrders.filter(o => o.statusId === state.id)
-          if (rows.length === 0) return null
-          const stateIdx = displayStates.findIndex(s => s.id === state.id)
-          const nextState = displayStates[stateIdx + 1]
-            ?? states.find(s => s.state === 'livrée')
-            ?? null
-
-          return (
-            <div key={state.id} style={styles.section}>
-              <div style={styles.sectionHeader}>
-                <span style={styles.sectionTitle}>{state.state}</span>
-                <div style={styles.sectionRule} />
-                <span style={styles.sectionCount}>{rows.length}</span>
-              </div>
-              {rows.map(order => (
-                <OrderRow
-                  key={order.id}
-                  order={order}
-                  now={now}
-                  nextState={nextState}
-                  onAdvance={advance}
-                />
-              ))}
-            </div>
-          )
-        })
-      )}
-
-      {/* ── Actions ────────────────────────────────────────── */}
-      <div style={styles.actionsRow}>
-        <ActionBtn label="Créer une commande" onClick={() => navigate('/new-command')} />
-        <ActionBtn label="Historique des commandes" onClick={() => navigate('/commands')} />
-      </div>
-
-      {/* ── Day stats + history ─────────────────────────────── */}
-      <div style={styles.historySeparator} />
-
-      {servedOrders.length > 0 && (
-        <div style={{ marginTop: 32 }}>
-          <div style={styles.sectionHeader}>
-            <span style={styles.sectionTitle}>Historique du jour</span>
-            <div style={styles.sectionRule} />
-            <span style={styles.sectionCount}>{servedOrders.length}</span>
-          </div>
-          {servedOrders.map(order => (
-            <HistoryRow key={order.id} order={order} />
-          ))}
-        </div>
-      )}
 
     </div>
   )
@@ -385,14 +385,15 @@ const styles: Record<string, React.CSSProperties> = {
   loadingText: { fontFamily: theme.fonts.ui, fontSize: 13, color: theme.colors.muted, letterSpacing: '0.1em', textTransform: 'uppercase' },
   errorText:   { fontFamily: theme.fonts.ui, fontSize: 13, color: theme.colors.danger },
 
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 52 },
+  root:   { height: '100%', display: 'flex', flexDirection: 'column' },
+
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexShrink: 0 },
   greetingText: { fontFamily: theme.fonts.title, fontSize: 72, color: theme.colors.onPrimary, letterSpacing: '0.04em', lineHeight: 1, display: 'block' },
   headerSub:    { display: 'block', fontFamily: theme.fonts.ui, fontSize: 13, fontWeight: 500, color: theme.colors.muted, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 12 },
   clockBlock:   { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 },
   clockTime:    { fontFamily: theme.fonts.title, fontSize: 68, color: theme.colors.onPrimary, letterSpacing: '0.04em', lineHeight: 1 },
   clockDate:    { fontFamily: theme.fonts.ui, fontSize: 13, fontWeight: 500, color: theme.colors.muted, letterSpacing: '0.08em', textTransform: 'capitalize' },
 
-  statsRow:  { display: 'flex', alignItems: 'center', paddingBottom: 48, marginBottom: 48, borderBottom: `1px solid rgba(42,31,21,0.08)` },
   statBlock: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
   statValue: { fontFamily: theme.fonts.title, fontSize: 80, lineHeight: 1, color: theme.colors.onPrimary, letterSpacing: '0.02em' },
   statLabel: { fontFamily: theme.fonts.ui, fontSize: 12, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: theme.colors.muted },
@@ -409,11 +410,17 @@ const styles: Record<string, React.CSSProperties> = {
   time:     { fontFamily: theme.fonts.ui, fontSize: 14, letterSpacing: '0.04em', minWidth: 80, textAlign: 'right' },
   total:    { fontFamily: theme.fonts.ui, fontSize: 15, fontWeight: 600, color: theme.colors.onPrimary, letterSpacing: '0.04em', minWidth: 80, textAlign: 'right' },
 
-  actionsRow: { display: 'flex', gap: 16, marginTop: 48, marginBottom: 8 },
+  // Top action bar: full width, flush to the content edges (escapes the
+  // main padding of 56px left / 96px right), the two buttons glued together.
+  actionsRow: { display: 'flex', gap: 0, marginLeft: -56, marginRight: -96, marginBottom: 28, flexShrink: 0 },
+  btnDivider: { width: 1, backgroundColor: 'rgba(255,250,237,0.18)', flexShrink: 0 },
 
-  historySeparator: { height: 2, backgroundColor: 'rgba(42,31,21,0.07)', margin: '56px 0', borderRadius: 1 },
+  // Orders fill the remaining height and scroll on their own → no page scroll.
+  scrollArea: { flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: 8 },
 
-  dayStatsRow:  { display: 'flex', alignItems: 'center', paddingBottom: 48, marginBottom: 8 },
+  // Stats pinned at the bottom of the page.
+  statsRowBottom: { display: 'flex', alignItems: 'center', paddingTop: 28, marginTop: 24, borderTop: `1px solid rgba(42,31,21,0.08)`, flexShrink: 0 },
+
   dayStatBlock: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
   dayStatValue: { fontFamily: theme.fonts.title, fontSize: 48, lineHeight: 1, color: theme.colors.onPrimary, letterSpacing: '0.03em' },
   dayStatLabel: { fontFamily: theme.fonts.ui, fontSize: 12, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: theme.colors.muted },
