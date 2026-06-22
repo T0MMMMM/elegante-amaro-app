@@ -80,7 +80,7 @@ export default function Commands() {
   return (
     <div>
       <div style={styles.header}>
-        <h1 style={styles.pageTitle}>Commandes</h1>
+        <h1 style={styles.pageTitle}>Historique des commandes</h1>
         <Button onClick={openCreate}>+ Nouvelle</Button>
       </div>
 
