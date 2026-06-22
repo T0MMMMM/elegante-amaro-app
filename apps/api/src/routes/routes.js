@@ -15,6 +15,7 @@ const routes = express.Router();
 
 // Users
 routes.get("/users", usersCtrl.getUsers);
+routes.get("/users/:id", usersCtrl.getUser);
 
 // Categories
 routes.get("/categories", categoriesCtrl.getAll);
