@@ -1,20 +1,48 @@
 import User from "../models/users.model.js";
 
-export const getAllUsers = async () => User.findAll();
+export const getAllUsers = async () => {
+  try {
+    const users = await User.findAll();
+    return users;
+  } catch (error) {
+    throw new Error("Error fetching users");
+  }
+};
 
-export const getUserById = async (id) => User.findByPk(id);
+export const getUserById = async (id) => {
+  try {
+    const user = await User.findByPk(id);
+    return user;
+  } catch (error) {
+    throw new Error("Error fetching user");
+  }
+};
 
-export const createUser = async (data) => User.create(data);
+export const createUser = async (data) => {
+  try {
+    return await User.create(data);
+  } catch (error) {
+    throw new Error("Error creating user");
+  }
+};
 
 export const updateUser = async (id, data) => {
-  const record = await User.findByPk(id);
-  if (!record) return null;
-  return record.update(data);
+  try {
+    const user = await User.findByPk(id);
+    if (!user) return null;
+    return await user.update(data);
+  } catch (error) {
+    throw new Error("Error updating user");
+  }
 };
 
 export const removeUser = async (id) => {
-  const record = await User.findByPk(id);
-  if (!record) return null;
-  await record.destroy();
-  return true;
+  try {
+    const user = await User.findByPk(id);
+    if (!user) return null;
+    await user.destroy();
+    return true;
+  } catch (error) {
+    throw new Error("Error deleting user");
+  }
 };

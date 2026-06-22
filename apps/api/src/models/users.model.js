@@ -27,7 +27,11 @@ const User = sequelize.define("User", {
   },
   roles: {
     type: DataTypes.JSON,
-    allowNull: true
+    allowNull: true,
+    get() {
+      const raw = this.getDataValue("roles");
+      return typeof raw === "string" ? JSON.parse(raw) : raw;
+    }
   }
 }, {
   tableName: "users",
