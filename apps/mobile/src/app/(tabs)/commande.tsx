@@ -6,26 +6,24 @@ import TableSelector from '@/src/components/order/TableSelector';
 import ScreenContainer from '@/src/components/ui/ScreenContainer';
 import SectionHeader from '@/src/components/ui/SectionHeader';
 import { useCartTotals } from '@/src/hooks/useCartTotals';
+import { useLiveData } from '@/src/hooks/useLiveData';
 import { orderService } from '@/src/services/orderService';
+import { useAuth } from '@/src/store/auth/AuthContext';
 import { useCart } from '@/src/store/cart/CartContext';
 import { theme } from '@/src/theme';
-import { CafeTable, CommandItem, CommandType } from '@/src/types';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function CommandeScreen() {
   const router = useRouter();
-  const { lines, typeId, tableId, updateQty, removeLine, setType, setTable, clear } = useCart();
+  const { user } = useAuth();
+  const { lines, typeId, tableId, updateQty, removeLine, setType, setTable } = useCart();
   const totals = useCartTotals();
 
-  const [types, setTypes] = useState<CommandType[]>([]);
-  const [tables, setTables] = useState<CafeTable[]>([]);
-
-  useEffect(() => {
-    orderService.getCommandTypes().then(setTypes);
-    orderService.getTables().then(setTables);
-  }, []);
+  const { data: typesData } = useLiveData(() => orderService.getCommandTypes());
+  const { data: tablesData } = useLiveData(() => orderService.getTables());
+  const types = typesData ?? [];
+  const tables = tablesData ?? [];
 
   if (lines.length === 0) {
     return (
@@ -35,30 +33,11 @@ export default function CommandeScreen() {
     );
   }
 
-  const handleValidate = async () => {
-    const items: CommandItem[] = lines.map((l, idx) => ({
-      id: idx + 1,
-      item: l.item,
-      quantity: l.quantity,
-      unitPrice: l.lineTotal / l.quantity,
-      lineTotal: l.lineTotal,
-      size: l.size,
-      options: l.options,
-    }));
-
-    await orderService.createCommand({
-      userId: 1,
-      typeId,
-      tableId,
-      items,
-      totalPrice: totals.total,
-    });
-
-    clear();
-    router.push({
-      pathname: '/order-confirmation',
-      params: { total: totals.total.toFixed(2), typeId: String(typeId) },
-    });
+  // Le panier n'est pas vidé ici : la commande est créée après un paiement
+  // réussi. Un invité passe d'abord par la saisie de ses informations.
+  const handleValidate = () => {
+    if (user) router.push('/checkout/payment');
+    else router.push('/checkout/guest-info');
   };
 
   return (

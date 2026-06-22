@@ -1,5 +1,7 @@
+import PressableScale from '@/src/components/ui/PressableScale';
 import { theme } from '@/src/theme';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text } from 'react-native';
 
 interface Props {
   label: string;
@@ -7,25 +9,42 @@ interface Props {
   onPress?: () => void;
 }
 
-/** Pastille sélectionnable (catégories, filtres). */
+/** Pastille sélectionnable (catégories, filtres) avec rebond à la sélection. */
 export default function Chip({ label, selected = false, onPress }: Props) {
+  const pop = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!selected) return;
+    pop.setValue(1.12);
+    Animated.spring(pop, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 24,
+      bounciness: 12,
+    }).start();
+  }, [selected, pop]);
+
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.chip,
-        selected ? styles.chipSelected : styles.chipIdle,
-        pressed && styles.pressed,
-      ]}
-    >
-      <Text style={[styles.label, selected ? styles.labelSelected : styles.labelIdle]}>
-        {label}
-      </Text>
-    </Pressable>
+    <PressableScale onPress={onPress} scaleTo={0.92} style={styles.shell}>
+      <Animated.View
+        style={[
+          styles.chip,
+          selected ? styles.chipSelected : styles.chipIdle,
+          { transform: [{ scale: pop }] },
+        ]}
+      >
+        <Text style={[styles.label, selected ? styles.labelSelected : styles.labelIdle]}>
+          {label}
+        </Text>
+      </Animated.View>
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
+  shell: {
+    borderRadius: theme.radius.pill,
+  },
   chip: {
     paddingHorizontal: theme.spacing.lg,
     height: 38,
@@ -41,9 +60,6 @@ const styles = StyleSheet.create({
   chipSelected: {
     backgroundColor: theme.colors.espresso,
     borderColor: theme.colors.espresso,
-  },
-  pressed: {
-    opacity: 0.8,
   },
   label: {
     fontFamily: theme.fontFamily.bodySemibold,

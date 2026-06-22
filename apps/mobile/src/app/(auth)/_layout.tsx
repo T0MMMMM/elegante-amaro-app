@@ -1,5 +1,13 @@
-import { Stack } from "expo-router";
+import { theme } from '@/src/theme';
+import { Stack } from 'expo-router';
 
-export default function RootLayout() {
-  return <Stack />;
+export default function AuthLayout() {
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: theme.colors.background },
+      }}
+    />
+  );
 }

@@ -53,6 +53,8 @@ export interface UserDTO {
   id: number;
   name: string;
   email: string;
+  /** Présent dans GET /users — mot de passe stocké en clair côté API (démo). */
+  password_hash?: string | null;
   fidelity_points: number | null;
   roles: string[] | string | null;
 }

@@ -1,8 +1,9 @@
+import PressableScale from '@/src/components/ui/PressableScale';
 import Price from '@/src/components/ui/Price';
 import { Item } from '@/src/types';
 import { theme } from '@/src/theme';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import CarouselDots from './CarouselDots';
 
 interface Props {
@@ -46,13 +47,9 @@ function ArrowButton({
 }) {
   const Icon = direction === 'left' ? ChevronLeft : ChevronRight;
   return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={10}
-      style={({ pressed }) => [styles.arrow, pressed && styles.arrowPressed]}
-    >
+    <PressableScale onPress={onPress} hitSlop={10} scaleTo={0.88} style={styles.arrow}>
       <Icon size={22} color={theme.colors.espresso} strokeWidth={2.2} />
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -91,8 +88,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     ...theme.shadows.soft,
-  },
-  arrowPressed: {
-    opacity: 0.7,
   },
 });

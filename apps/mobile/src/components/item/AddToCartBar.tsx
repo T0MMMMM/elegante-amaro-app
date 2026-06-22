@@ -1,5 +1,5 @@
 import Button from '@/src/components/ui/Button';
-import { formatPrice } from '@/src/constants/config';
+import Price from '@/src/components/ui/Price';
 import { theme } from '@/src/theme';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,7 +16,7 @@ export default function AddToCartBar({ total, onAdd }: Props) {
     <View style={[styles.bar, { paddingBottom: Math.max(insets.bottom, theme.spacing.lg) }]}>
       <View style={styles.totalBlock}>
         <Text style={styles.totalLabel}>Total</Text>
-        <Text style={styles.totalValue}>{formatPrice(total)}</Text>
+        <Price value={total} size={26} color={theme.colors.espresso} />
       </View>
       <Button label="Ajouter au panier" onPress={onAdd} style={styles.button} />
     </View>
@@ -40,11 +40,6 @@ const styles = StyleSheet.create({
   totalLabel: {
     ...theme.typography.label,
     color: theme.colors.textMuted,
-  },
-  totalValue: {
-    fontFamily: theme.fontFamily.display,
-    fontSize: 26,
-    color: theme.colors.espresso,
   },
   button: {
     flex: 1,

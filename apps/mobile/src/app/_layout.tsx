@@ -1,4 +1,5 @@
 import useAppFonts from '@/src/hooks/useFonts';
+import { AuthProvider } from '@/src/store/auth/AuthContext';
 import { CartProvider } from '@/src/store/cart/CartContext';
 import { theme } from '@/src/theme';
 import { Stack } from 'expo-router';
@@ -22,15 +23,17 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <CartProvider>
-          <StatusBar style="dark" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: theme.colors.background },
-            }}
-          />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <StatusBar style="dark" />
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: theme.colors.background },
+              }}
+            />
+          </CartProvider>
+        </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

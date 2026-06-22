@@ -6,13 +6,3 @@ export interface User {
   fidelityPoints: number;
   roles: string[];
 }
-
-/** Informations client éditables (écran « Mes informations »). */
-export interface ClientInfo {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  postalCode: string;
-  city: string;
-}

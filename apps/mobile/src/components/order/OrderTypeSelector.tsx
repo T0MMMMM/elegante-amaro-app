@@ -1,7 +1,9 @@
-import { CommandType } from '@/src/types';
+import PressableScale from '@/src/components/ui/PressableScale';
 import { theme } from '@/src/theme';
+import { CommandType } from '@/src/types';
 import { LucideIcon, ShoppingBag, Utensils } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text, View } from 'react-native';
 
 /** Icône par type de commande (1 = sur place, 2 = à emporter). */
 const TYPE_ICONS: Record<number, LucideIcon> = {
@@ -19,26 +21,53 @@ interface Props {
 export default function OrderTypeSelector({ types, selectedId, onSelect }: Props) {
   return (
     <View style={styles.row}>
-      {types.map((t) => {
-        const selected = t.id === selectedId;
-        const Icon = TYPE_ICONS[t.id] ?? Utensils;
-        const color = selected ? theme.colors.cream : theme.colors.textMuted;
-        return (
-          <Pressable
-            key={t.id}
-            onPress={() => onSelect(t.id)}
-            style={({ pressed }) => [
-              styles.segment,
-              selected ? styles.selected : styles.idle,
-              pressed && styles.pressed,
-            ]}
-          >
-            <Icon size={22} color={color} strokeWidth={2} />
-            <Text style={[styles.label, { color }]}>{t.name}</Text>
-          </Pressable>
-        );
-      })}
+      {types.map((t) => (
+        <TypeSegment
+          key={t.id}
+          type={t}
+          selected={t.id === selectedId}
+          onPress={() => onSelect(t.id)}
+        />
+      ))}
     </View>
+  );
+}
+
+function TypeSegment({
+  type,
+  selected,
+  onPress,
+}: {
+  type: CommandType;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const Icon = TYPE_ICONS[type.id] ?? Utensils;
+  const color = selected ? theme.colors.cream : theme.colors.textMuted;
+  const pop = useRef(new Animated.Value(selected ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(pop, {
+      toValue: selected ? 1 : 0,
+      useNativeDriver: true,
+      speed: 26,
+      bounciness: 14,
+    }).start();
+  }, [selected, pop]);
+
+  const iconScale = pop.interpolate({ inputRange: [0, 1], outputRange: [1, 1.15] });
+
+  return (
+    <PressableScale
+      onPress={onPress}
+      containerStyle={styles.flex}
+      style={[styles.segment, selected ? styles.selected : styles.idle]}
+    >
+      <Animated.View style={{ transform: [{ scale: iconScale }] }}>
+        <Icon size={22} color={color} strokeWidth={2} />
+      </Animated.View>
+      <Text style={[styles.label, { color }]}>{type.name}</Text>
+    </PressableScale>
   );
 }
 
@@ -47,8 +76,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: theme.spacing.md,
   },
-  segment: {
+  flex: {
     flex: 1,
+  },
+  segment: {
     height: 76,
     borderRadius: theme.radius.md,
     alignItems: 'center',
@@ -64,9 +95,6 @@ const styles = StyleSheet.create({
   selected: {
     backgroundColor: theme.colors.espresso,
     borderColor: theme.colors.espresso,
-  },
-  pressed: {
-    opacity: 0.85,
   },
   label: {
     fontFamily: theme.fontFamily.bodySemibold,

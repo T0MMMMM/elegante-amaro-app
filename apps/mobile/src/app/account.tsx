@@ -1,47 +1,41 @@
 import Button from '@/src/components/ui/Button';
+import FormField from '@/src/components/ui/FormField';
 import ScreenContainer from '@/src/components/ui/ScreenContainer';
 import ScreenHeader from '@/src/components/ui/ScreenHeader';
-import { userService } from '@/src/services/userService';
+import { useAuth } from '@/src/store/auth/AuthContext';
 import { theme } from '@/src/theme';
-import { ClientInfo } from '@/src/types';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TextInputProps,
-  View,
-} from 'react-native';
+import { Redirect, useRouter } from 'expo-router';
+import { useState } from 'react';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from 'react-native';
 
 export default function AccountScreen() {
   const router = useRouter();
-  const [info, setInfo] = useState<ClientInfo | null>(null);
+  const { user, updateProfile } = useAuth();
+
+  const [name, setName] = useState(user?.name ?? '');
+  const [email, setEmail] = useState(user?.email ?? '');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    userService.getClientInfo().then(setInfo);
-  }, []);
-
-  if (!info) {
-    return (
-      <ScreenContainer>
-        <ScreenHeader title="Mes informations" />
-      </ScreenContainer>
-    );
-  }
-
-  const set = (key: keyof ClientInfo) => (value: string) =>
-    setInfo((prev) => (prev ? { ...prev, [key]: value } : prev));
+  // Écran réservé aux utilisateurs connectés.
+  if (!user) return <Redirect href="/login" />;
 
   const handleSave = async () => {
+    if (!name.trim() || !email.trim()) {
+      setError('Le nom et l’email sont requis.');
+      return;
+    }
     setSaving(true);
-    await userService.updateClientInfo(info);
-    setSaving(false);
-    router.back();
+    setError(null);
+    try {
+      await updateProfile({ name, email, password: password || undefined });
+      router.back();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Enregistrement impossible.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -57,39 +51,27 @@ export default function AccountScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <Text style={styles.note}>
-            Pas de livraison : ces informations servent à votre compte et à vos reçus.
+            Ces informations correspondent à ton compte. Laisse le mot de passe vide pour ne pas le
+            changer.
           </Text>
 
-          <Field label="Nom complet" value={info.name} onChangeText={set('name')} />
-          <Field
+          <FormField label="Nom complet" value={name} onChangeText={setName} autoCapitalize="words" />
+          <FormField
             label="Email"
-            value={info.email}
-            onChangeText={set('email')}
+            value={email}
+            onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
           />
-          <Field
-            label="Téléphone"
-            value={info.phone}
-            onChangeText={set('phone')}
-            keyboardType="phone-pad"
+          <FormField
+            label="Nouveau mot de passe"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Laisser vide pour ne pas changer"
+            secureTextEntry
           />
-          <Field label="Adresse" value={info.address} onChangeText={set('address')} />
-          <View style={styles.row}>
-            <Field
-              label="Code postal"
-              value={info.postalCode}
-              onChangeText={set('postalCode')}
-              keyboardType="number-pad"
-              containerStyle={styles.flex1}
-            />
-            <Field
-              label="Ville"
-              value={info.city}
-              onChangeText={set('city')}
-              containerStyle={styles.flex2}
-            />
-          </View>
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <Button label="Enregistrer" loading={saving} onPress={handleSave} style={styles.save} />
         </ScrollView>
@@ -98,33 +80,9 @@ export default function AccountScreen() {
   );
 }
 
-type FieldProps = TextInputProps & {
-  label: string;
-  containerStyle?: object;
-};
-
-function Field({ label, containerStyle, ...props }: FieldProps) {
-  return (
-    <View style={[styles.field, containerStyle]}>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor={theme.colors.textMuted}
-        {...props}
-      />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   flex: {
     flex: 1,
-  },
-  flex1: {
-    flex: 1,
-  },
-  flex2: {
-    flex: 2,
   },
   content: {
     padding: theme.spacing.xl,
@@ -136,27 +94,9 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     color: theme.colors.textMuted,
   },
-  field: {
-    gap: theme.spacing.sm,
-  },
-  label: {
-    ...theme.typography.label,
-    color: theme.colors.goldDark,
-  },
-  input: {
-    height: 52,
-    paddingHorizontal: theme.spacing.lg,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1.5,
-    borderColor: theme.colors.border,
-    fontFamily: theme.fontFamily.bodyMedium,
-    fontSize: 15,
-    color: theme.colors.espresso,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
+  error: {
+    ...theme.typography.body,
+    color: theme.colors.danger,
   },
   save: {
     marginTop: theme.spacing.md,

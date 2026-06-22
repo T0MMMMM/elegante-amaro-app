@@ -1,8 +1,10 @@
+import PressableScale from '@/src/components/ui/PressableScale';
 import { formatPrice } from '@/src/constants/config';
-import { ItemOption } from '@/src/types';
 import { theme } from '@/src/theme';
+import { ItemOption } from '@/src/types';
 import { Check } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text } from 'react-native';
 
 interface Props {
   option: ItemOption;
@@ -12,17 +14,29 @@ interface Props {
 
 /** Ligne d'option (extra) sélectionnable avec son supplément de prix. */
 export default function OptionToggle({ option, selected, onToggle }: Props) {
+  const anim = useRef(new Animated.Value(selected ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(anim, {
+      toValue: selected ? 1 : 0,
+      useNativeDriver: true,
+      speed: 30,
+      bounciness: 14,
+    }).start();
+  }, [selected, anim]);
+
+  const checkScale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] });
+
   return (
-    <Pressable
-      onPress={onToggle}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-    >
-      <View style={[styles.box, selected ? styles.boxOn : styles.boxOff]}>
-        {selected ? <Check size={14} color={theme.colors.espresso} strokeWidth={3} /> : null}
-      </View>
+    <PressableScale onPress={onToggle} scaleTo={0.97} style={styles.row}>
+      <Animated.View style={[styles.box, selected ? styles.boxOn : styles.boxOff]}>
+        <Animated.View style={{ opacity: anim, transform: [{ scale: checkScale }] }}>
+          <Check size={14} color={theme.colors.espresso} strokeWidth={3} />
+        </Animated.View>
+      </Animated.View>
       <Text style={styles.name}>{option.name}</Text>
       <Text style={styles.extra}>+ {formatPrice(option.extraPrice)}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -32,9 +46,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: theme.spacing.md,
     paddingVertical: theme.spacing.md,
-  },
-  pressed: {
-    opacity: 0.7,
+    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.radius.md,
   },
   box: {
     width: 24,

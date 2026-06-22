@@ -1,16 +1,24 @@
 import { Item } from '@/src/types';
 import { theme } from '@/src/theme';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import ItemCard from './ItemCard';
 
 interface Props {
   items: Item[];
   onPressItem: (item: Item) => void;
   ListHeaderComponent?: React.ReactElement;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
 
 /** Grille 2 colonnes de cartes produit. */
-export default function ItemGrid({ items, onPressItem, ListHeaderComponent }: Props) {
+export default function ItemGrid({
+  items,
+  onPressItem,
+  ListHeaderComponent,
+  refreshing,
+  onRefresh,
+}: Props) {
   return (
     <FlatList
       data={items}
@@ -20,6 +28,16 @@ export default function ItemGrid({ items, onPressItem, ListHeaderComponent }: Pr
       contentContainerStyle={styles.content}
       ListHeaderComponent={ListHeaderComponent}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        onRefresh ? (
+          <RefreshControl
+            refreshing={!!refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.colors.gold}
+            colors={[theme.colors.gold]}
+          />
+        ) : undefined
+      }
       renderItem={({ item }) => (
         <View style={styles.cell}>
           <ItemCard item={item} onPress={() => onPressItem(item)} />

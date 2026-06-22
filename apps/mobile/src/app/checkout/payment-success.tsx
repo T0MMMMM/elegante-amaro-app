@@ -1,0 +1,205 @@
+import Button from '@/src/components/ui/Button';
+import { formatPrice } from '@/src/constants/config';
+import { useCartTotals } from '@/src/hooks/useCartTotals';
+import { orderService } from '@/src/services/orderService';
+import { userService } from '@/src/services/userService';
+import { useAuth } from '@/src/store/auth/AuthContext';
+import { useCart } from '@/src/store/cart/CartContext';
+import { theme } from '@/src/theme';
+import { CommandItem } from '@/src/types';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Check } from 'lucide-react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+
+export default function PaymentSuccessScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ guestName?: string; guestEmail?: string }>();
+  const { user, signInAs } = useAuth();
+  const { lines, typeId, tableId, clear } = useCart();
+  const totals = useCartTotals();
+
+  // Montant figé avant le vidage du panier.
+  const [amount] = useState(() => totals.total);
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const created = useRef(false);
+
+  // Crée la commande une seule fois, à l'arrivée sur l'écran.
+  useEffect(() => {
+    if (created.current) return;
+    created.current = true;
+
+    (async () => {
+      try {
+        let userId: number;
+        if (user) {
+          userId = user.id;
+        } else {
+          // Commande invité : on crée/retrouve le compte et on l'y connecte.
+          const guest = await userService.upsertGuest(
+            params.guestName ?? '',
+            params.guestEmail ?? '',
+          );
+          await signInAs(guest);
+          userId = guest.id;
+        }
+
+        const items: CommandItem[] = lines.map((l, idx) => ({
+          id: idx + 1,
+          item: l.item,
+          quantity: l.quantity,
+          unitPrice: l.lineTotal / l.quantity,
+          lineTotal: l.lineTotal,
+          size: l.size,
+          options: l.options,
+        }));
+
+        const command = await orderService.createCommand({
+          userId,
+          typeId,
+          tableId,
+          items,
+          totalPrice: amount,
+        });
+
+        clear();
+        setOrderNumber(`EA-${command.id}`);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Impossible d’enregistrer la commande.');
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pending = !orderNumber && !error;
+
+  return (
+    <View style={styles.root}>
+      <View style={styles.circle}>
+        <Check size={56} color={theme.colors.cream} strokeWidth={3} />
+      </View>
+
+      <Text style={styles.title}>Paiement validé</Text>
+      <Text style={styles.subtitle}>Ton paiement de {formatPrice(amount)} a bien été accepté.</Text>
+
+      {pending ? (
+        <View style={styles.pending}>
+          <ActivityIndicator color={theme.colors.gold} />
+          <Text style={styles.pendingText}>Enregistrement de ta commande…</Text>
+        </View>
+      ) : null}
+
+      {orderNumber ? (
+        <View style={styles.recap}>
+          <View style={styles.recapRow}>
+            <Text style={styles.recapLabel}>Commande</Text>
+            <Text style={styles.recapValue}>{orderNumber}</Text>
+          </View>
+          <View style={styles.recapRow}>
+            <Text style={styles.recapLabel}>Statut</Text>
+            <Text style={styles.recapState}>En attente</Text>
+          </View>
+          <View style={styles.recapRow}>
+            <Text style={styles.recapLabel}>Total payé</Text>
+            <Text style={styles.recapTotal}>{formatPrice(amount)}</Text>
+          </View>
+        </View>
+      ) : null}
+
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      <Button
+        label="Retour à l'accueil"
+        onPress={() => router.replace('/accueil')}
+        disabled={pending}
+        style={styles.button}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing.xxl,
+    gap: theme.spacing.lg,
+  },
+  circle: {
+    width: 110,
+    height: 110,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.sm,
+    ...theme.shadows.card,
+  },
+  title: {
+    ...theme.typography.h1,
+    fontSize: 36,
+    color: theme.colors.espresso,
+    textAlign: 'center',
+  },
+  subtitle: {
+    ...theme.typography.body,
+    color: theme.colors.textMuted,
+    textAlign: 'center',
+  },
+  pending: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.sm,
+  },
+  pendingText: {
+    ...theme.typography.body,
+    color: theme.colors.textMuted,
+  },
+  recap: {
+    alignSelf: 'stretch',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.lg,
+    padding: theme.spacing.xl,
+    gap: theme.spacing.md,
+    marginTop: theme.spacing.md,
+    ...theme.shadows.soft,
+  },
+  recapRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  recapLabel: {
+    fontFamily: theme.fontFamily.bodyMedium,
+    fontSize: 14,
+    color: theme.colors.textMuted,
+  },
+  recapValue: {
+    fontFamily: theme.fontFamily.bodySemibold,
+    fontSize: 14,
+    color: theme.colors.espresso,
+  },
+  recapState: {
+    fontFamily: theme.fontFamily.bodySemibold,
+    fontSize: 14,
+    color: theme.colors.warning,
+  },
+  recapTotal: {
+    fontFamily: theme.fontFamily.display,
+    fontSize: 24,
+    color: theme.colors.goldDark,
+  },
+  error: {
+    ...theme.typography.body,
+    color: theme.colors.danger,
+    textAlign: 'center',
+  },
+  button: {
+    alignSelf: 'stretch',
+    marginTop: theme.spacing.lg,
+  },
+});

@@ -7,15 +7,25 @@ const STEPS = ['En attente', 'En préparation', 'Prête'];
 
 /** Carte de commande en cours : n° de commande, suivi de statut, récap, total. */
 export default function OngoingOrderCard({ order }: { order: OngoingOrder }) {
+  const isReady = order.stateStep === 3;
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, isReady && styles.cardReady]}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.number}>Commande {order.number}</Text>
+          <View style={styles.numberRow}>
+            {isReady ? (
+              <View style={styles.readyDot}>
+                <View style={styles.readyDotInner} />
+              </View>
+            ) : null}
+            <Text style={styles.number}>Commande {order.number}</Text>
+          </View>
           <Text style={styles.placed}>{order.placedAtLabel}</Text>
         </View>
-        <View style={styles.statusChip}>
-          <Text style={styles.statusText}>{order.stateLabel}</Text>
+        <View style={[styles.statusChip, isReady && styles.statusChipReady]}>
+          <Text style={[styles.statusText, isReady && styles.statusTextReady]}>
+            {order.stateLabel}
+          </Text>
         </View>
       </View>
 
@@ -78,6 +88,9 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.gold,
     ...theme.shadows.card,
   },
+  cardReady: {
+    borderColor: theme.colors.success,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -85,6 +98,25 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     gap: 2,
+  },
+  numberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  readyDot: {
+    width: 16,
+    height: 16,
+    borderRadius: theme.radius.pill,
+    backgroundColor: 'rgba(107,142,90,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  readyDotInner: {
+    width: 9,
+    height: 9,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.success,
   },
   number: {
     fontFamily: theme.fontFamily.display,
@@ -103,10 +135,16 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.espresso,
   },
+  statusChipReady: {
+    backgroundColor: theme.colors.success,
+  },
   statusText: {
     fontFamily: theme.fontFamily.bodySemibold,
     fontSize: 12,
     color: theme.colors.gold,
+  },
+  statusTextReady: {
+    color: theme.colors.cream,
   },
   dotsRow: {
     flexDirection: 'row',

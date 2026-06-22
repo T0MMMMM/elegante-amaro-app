@@ -1,9 +1,10 @@
+import PressableScale from '@/src/components/ui/PressableScale';
 import Price from '@/src/components/ui/Price';
-import { Item } from '@/src/types';
 import { theme } from '@/src/theme';
+import { Item } from '@/src/types';
 import { Image } from 'expo-image';
 import { Plus } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface Props {
   item: Item;
@@ -13,55 +14,57 @@ interface Props {
 /** Carte produit pour la grille de la Carte. */
 export default function ItemCard({ item, onPress }: Props) {
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
-    >
-      <Image
-        source={item.image}
-        style={styles.image}
-        contentFit="cover"
-        transition={250}
-      />
+    <PressableScale onPress={onPress} scaleTo={0.96} containerStyle={styles.shell} style={styles.card}>
+      <View style={styles.imageWrap}>
+        <Image source={item.image} style={styles.image} contentFit="cover" transition={250} />
+      </View>
       <View style={styles.body}>
         <Text style={styles.name} numberOfLines={2}>
           {item.name}
         </Text>
         <View style={styles.footer}>
-          <Price value={item.price} size={20} />
+          <Price value={item.price} size={20} animate={false} />
           <View style={styles.plus}>
             <Plus size={16} color={theme.colors.espresso} strokeWidth={2.5} />
           </View>
         </View>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
+  shell: {
+    flex: 1,
+  },
   card: {
     flex: 1,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radius.lg,
-    overflow: 'hidden',
+    borderRadius: theme.radius.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.sm,
     ...theme.shadows.card,
   },
-  pressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.99 }],
+  imageWrap: {
+    borderRadius: theme.radius.lg,
+    overflow: 'hidden',
   },
   image: {
     width: '100%',
-    height: 124,
+    height: 138,
     backgroundColor: theme.colors.surfaceAlt,
   },
   body: {
-    padding: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.xs,
     gap: theme.spacing.sm,
   },
   name: {
     fontFamily: theme.fontFamily.bodySemibold,
-    fontSize: 14,
+    fontSize: 15,
+    lineHeight: 19,
     color: theme.colors.espresso,
     minHeight: 38,
   },
@@ -71,11 +74,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   plus: {
-    width: 30,
-    height: 30,
+    width: 34,
+    height: 34,
     borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.gold,
     alignItems: 'center',
     justifyContent: 'center',
+    ...theme.shadows.soft,
   },
 });

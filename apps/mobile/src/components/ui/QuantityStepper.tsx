@@ -1,6 +1,8 @@
+import PressableScale from '@/src/components/ui/PressableScale';
 import { theme } from '@/src/theme';
 import { Minus, Plus } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
 
 interface Props {
   value: number;
@@ -15,35 +17,42 @@ export default function QuantityStepper({ value, onChange, min = 1, max = 99, si
   const dim = size === 'sm' ? 30 : 38;
   const icon = size === 'sm' ? 16 : 18;
 
+  const pop = useRef(new Animated.Value(1)).current;
+  const mounted = useRef(false);
+
+  useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
+    pop.setValue(1.25);
+    Animated.spring(pop, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 20,
+      bounciness: 12,
+    }).start();
+  }, [value, pop]);
+
   return (
     <View style={styles.row}>
-      <Pressable
+      <PressableScale
         onPress={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
-        style={({ pressed }) => [
-          styles.btn,
-          { width: dim, height: dim },
-          value <= min && styles.btnDisabled,
-          pressed && styles.pressed,
-        ]}
+        style={[styles.btn, { width: dim, height: dim }, value <= min && styles.btnDisabled]}
       >
         <Minus size={icon} color={theme.colors.espresso} strokeWidth={2.5} />
-      </Pressable>
+      </PressableScale>
 
-      <Text style={styles.value}>{value}</Text>
+      <Animated.Text style={[styles.value, { transform: [{ scale: pop }] }]}>{value}</Animated.Text>
 
-      <Pressable
+      <PressableScale
         onPress={() => onChange(Math.min(max, value + 1))}
         disabled={value >= max}
-        style={({ pressed }) => [
-          styles.btn,
-          { width: dim, height: dim },
-          value >= max && styles.btnDisabled,
-          pressed && styles.pressed,
-        ]}
+        style={[styles.btn, { width: dim, height: dim }, value >= max && styles.btnDisabled]}
       >
         <Plus size={icon} color={theme.colors.espresso} strokeWidth={2.5} />
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }
@@ -64,9 +73,6 @@ const styles = StyleSheet.create({
   },
   btnDisabled: {
     opacity: 0.4,
-  },
-  pressed: {
-    opacity: 0.7,
   },
   value: {
     fontFamily: theme.fontFamily.display,

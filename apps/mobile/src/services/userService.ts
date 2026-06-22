@@ -1,36 +1,48 @@
 import { api } from '@/src/services/api/client';
 import { UserDTO } from '@/src/services/api/dto';
 import { mapUser } from '@/src/services/api/mappers';
-import { ClientInfo, User } from '@/src/types';
+import { User } from '@/src/types';
 
-/**
- * Utilisateur via l'API. Pas d'endpoint /me ni de PUT /users :
- * on prend le premier utilisateur, et l'édition d'infos reste locale.
- */
+export interface ProfileUpdate {
+  name: string;
+  email: string;
+  /** Optionnel — renseigné seulement si l'utilisateur change de mot de passe. */
+  password?: string;
+}
+
+/** Utilisateurs via l'API (CRUD `/users`). */
 export const userService = {
-  async getCurrentUser(): Promise<User> {
-    const users = await api.get<UserDTO[]>('/users');
-    const current = users[0];
-    if (!current) throw new Error('Aucun utilisateur disponible.');
-    return mapUser(current);
+  async getById(id: number): Promise<User> {
+    const dto = await api.get<UserDTO>(`/users/${id}`);
+    return mapUser(dto);
   },
 
-  async getClientInfo(): Promise<ClientInfo> {
-    const users = await api.get<UserDTO[]>('/users');
-    const u = users[0];
-    return {
-      name: u?.name ?? '',
-      email: u?.email ?? '',
-      // Non présents dans la table `users` — à ajouter côté API si besoin :
-      phone: '',
-      address: '',
-      postalCode: '',
-      city: '',
+  /** Met à jour le profil (PUT /users/:id). Le mot de passe n'est envoyé que s'il change. */
+  async updateProfile(id: number, data: ProfileUpdate): Promise<User> {
+    const body: Record<string, unknown> = {
+      name: data.name.trim(),
+      email: data.email.trim().toLowerCase(),
     };
+    if (data.password) body.password_hash = data.password;
+    const updated = await api.put<UserDTO>(`/users/${id}`, body);
+    return mapUser(updated);
   },
 
-  /** Pas de PUT /users dans l'API : mise à jour locale uniquement. */
-  async updateClientInfo(info: ClientInfo): Promise<ClientInfo> {
-    return info;
+  /**
+   * Commande invité : retrouve l'utilisateur par email ou en crée un
+   * (sans mot de passe) pour rattacher la commande à un `user_id`.
+   */
+  async upsertGuest(name: string, email: string): Promise<User> {
+    const target = email.trim().toLowerCase();
+    const users = await api.get<UserDTO[]>('/users');
+    const existing = users.find((u) => (u.email ?? '').toLowerCase() === target);
+    if (existing) return mapUser(existing);
+    const created = await api.post<UserDTO>('/users', {
+      name: name.trim(),
+      email: target,
+      fidelity_points: 0,
+      roles: ['client'],
+    });
+    return mapUser(created);
   },
 };

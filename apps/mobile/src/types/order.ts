@@ -39,6 +39,8 @@ export interface OrderSummary {
   stateLabel: string;
   total: number;
   itemCount: number;
+  /** ISO — pour trier du plus récent au plus ancien. */
+  createdAt: string;
 }
 
 /** Ligne récap d'une commande en cours. */
@@ -58,6 +60,8 @@ export interface OngoingOrder {
   tableNumber?: number;
   total: number;
   placedAtLabel: string;
+  /** ISO — pour trier du plus récent au plus ancien. */
+  createdAt: string;
   items: OngoingOrderItem[];
 }
 

@@ -1,15 +1,17 @@
+import OngoingOrderCard from '@/src/components/order/OngoingOrderCard';
 import FidelityCard from '@/src/components/profile/FidelityCard';
 import ProfileRow from '@/src/components/profile/ProfileRow';
+import Button from '@/src/components/ui/Button';
 import Card from '@/src/components/ui/Card';
 import Divider from '@/src/components/ui/Divider';
 import ScreenContainer from '@/src/components/ui/ScreenContainer';
-import { userService } from '@/src/services/userService';
+import { useLiveData } from '@/src/hooks/useLiveData';
+import { orderService } from '@/src/services/orderService';
+import { useAuth } from '@/src/store/auth/AuthContext';
 import { theme } from '@/src/theme';
-import { User } from '@/src/types';
 import { useRouter } from 'expo-router';
-import { ClipboardList, LogOut, Settings, UserCog } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ClipboardList, LogOut, Settings, UserCog, UserRound } from 'lucide-react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 function initials(name: string): string {
   return name
@@ -22,17 +24,59 @@ function initials(name: string): string {
 
 export default function ProfilScreen() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, logout } = useAuth();
 
-  useEffect(() => {
-    userService.getCurrentUser().then(setUser);
-  }, []);
+  // Suivi de commande : refetch au focus + polling toutes les 8 s tant que l'écran est visible.
+  const { data, refreshing, refresh } = useLiveData(
+    () => (user ? orderService.getOngoingCommands(user.id) : Promise.resolve([])),
+    { pollMs: 8000, enabled: !!user },
+  );
+  const ongoing = data ?? [];
 
-  if (!user) return <ScreenContainer />;
+  if (!user) {
+    return (
+      <ScreenContainer>
+        <ScrollView
+          contentContainerStyle={styles.guestScroll}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.guestHeader}>
+            <View style={styles.guestAvatar}>
+              <UserRound size={32} color={theme.colors.goldDark} strokeWidth={2} />
+            </View>
+            <Text style={styles.guestTitle}>Bienvenue</Text>
+            <Text style={styles.guestSubtitle}>
+              Connecte-toi pour suivre tes commandes et cumuler des points fidélité.
+            </Text>
+          </View>
+
+          <View style={styles.guestActions}>
+            <Button label="Se connecter" onPress={() => router.push('/login')} />
+            <Button
+              label="Créer un compte"
+              variant="outline"
+              onPress={() => router.push('/register')}
+            />
+          </View>
+        </ScrollView>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            tintColor={theme.colors.gold}
+            colors={[theme.colors.gold]}
+          />
+        }
+      >
         <View style={styles.header}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{initials(user.name)}</Text>
@@ -45,10 +89,21 @@ export default function ProfilScreen() {
 
         <FidelityCard points={user.fidelityPoints} />
 
+        {ongoing.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Commandes en cours</Text>
+            <View style={styles.list}>
+              {ongoing.map((order) => (
+                <OngoingOrderCard key={order.id} order={order} />
+              ))}
+            </View>
+          </View>
+        ) : null}
+
         <Card style={styles.menu}>
           <ProfileRow
             icon={ClipboardList}
-            label="Mes commandes"
+            label="Historique des commandes"
             onPress={() => router.push('/orders')}
           />
           <Divider />
@@ -62,7 +117,7 @@ export default function ProfilScreen() {
         </Card>
 
         <Card style={styles.menu}>
-          <ProfileRow icon={LogOut} label="Déconnexion" danger />
+          <ProfileRow icon={LogOut} label="Déconnexion" danger onPress={logout} />
         </Card>
       </ScrollView>
     </ScreenContainer>
@@ -105,8 +160,50 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     color: theme.colors.textMuted,
   },
+  section: {
+    gap: theme.spacing.md,
+  },
+  sectionTitle: {
+    ...theme.typography.label,
+    color: theme.colors.goldDark,
+  },
+  list: {
+    gap: theme.spacing.md,
+  },
   menu: {
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.xs,
+  },
+  guestScroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: theme.spacing.xl,
+    gap: theme.spacing.xxl,
+  },
+  guestHeader: {
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  guestAvatar: {
+    width: 72,
+    height: 72,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.sm,
+  },
+  guestTitle: {
+    ...theme.typography.h2,
+    color: theme.colors.espresso,
+  },
+  guestSubtitle: {
+    ...theme.typography.body,
+    color: theme.colors.textMuted,
+    textAlign: 'center',
+    paddingHorizontal: theme.spacing.lg,
+  },
+  guestActions: {
+    gap: theme.spacing.md,
   },
 });

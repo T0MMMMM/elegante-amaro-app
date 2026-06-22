@@ -54,14 +54,30 @@ export const orderService = {
     return data.map(mapTable);
   },
 
-  async getOngoingCommands(): Promise<OngoingOrder[]> {
+  /**
+   * Commandes en cours de l'utilisateur, triées : les commandes « Prête »
+   * (stateStep 3) toujours en tête, puis du plus récent au plus ancien.
+   */
+  async getOngoingCommands(userId: number): Promise<OngoingOrder[]> {
     const data = await api.get<CommandDTO[]>('/commands');
-    return data.filter(isOngoing).map(mapOngoingOrder);
+    return data
+      .filter((d) => d.user_id === userId && isOngoing(d))
+      .map(mapOngoingOrder)
+      .sort((a, b) => {
+        const aReady = a.stateStep === 3;
+        const bReady = b.stateStep === 3;
+        if (aReady !== bReady) return aReady ? -1 : 1;
+        return b.createdAt.localeCompare(a.createdAt);
+      });
   },
 
-  async getUserCommands(): Promise<OrderSummary[]> {
+  /** Historique de l'utilisateur, du plus récent au plus ancien. */
+  async getUserCommands(userId: number): Promise<OrderSummary[]> {
     const data = await api.get<CommandDTO[]>('/commands');
-    return data.filter((d) => !isOngoing(d)).map(mapOrderSummary);
+    return data
+      .filter((d) => d.user_id === userId && !isOngoing(d))
+      .map(mapOrderSummary)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   },
 
   async createCommand(payload: CreateCommandPayload): Promise<Command> {

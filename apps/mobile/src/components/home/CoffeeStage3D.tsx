@@ -24,10 +24,11 @@ export default function CoffeeStage3D({ modelSource, style }: Props) {
   const source = modelSource ?? COFFEE_MODEL;
   const model = {
     link: source,
-    scale: 1.6,
+    scale: 2.1,
     rotation: [0, 0, -Math.PI / 16],
     position: [0, 10, 0],
-    relativePosition: [0, -1, 0],
+    // Remonté (de -1 à -0.3) pour que la tasse agrandie ne soit plus coupée en bas.
+    relativePosition: [0, -0.3, 0],
   };
 
   return (

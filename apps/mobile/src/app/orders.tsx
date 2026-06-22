@@ -1,13 +1,14 @@
-import OngoingOrderCard from '@/src/components/order/OngoingOrderCard';
+import Button from '@/src/components/ui/Button';
 import ScreenContainer from '@/src/components/ui/ScreenContainer';
 import ScreenHeader from '@/src/components/ui/ScreenHeader';
 import { formatPrice } from '@/src/constants/config';
+import { useLiveData } from '@/src/hooks/useLiveData';
 import { orderService } from '@/src/services/orderService';
+import { useAuth } from '@/src/store/auth/AuthContext';
 import { theme } from '@/src/theme';
-import { OngoingOrder, OrderSummary } from '@/src/types';
+import { useRouter } from 'expo-router';
 import { Package } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 function stateColor(label: string): string {
   if (label === 'Servie') return theme.colors.success;
@@ -16,31 +17,46 @@ function stateColor(label: string): string {
 }
 
 export default function OrdersScreen() {
-  const [ongoing, setOngoing] = useState<OngoingOrder[]>([]);
-  const [past, setPast] = useState<OrderSummary[]>([]);
+  const router = useRouter();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    orderService.getOngoingCommands().then(setOngoing);
-    orderService.getUserCommands().then(setPast);
-  }, []);
+  const { data, refreshing, refresh } = useLiveData(
+    () => (user ? orderService.getUserCommands(user.id) : Promise.resolve([])),
+    { enabled: !!user },
+  );
+  const past = data ?? [];
+
+  if (!user) {
+    return (
+      <ScreenContainer>
+        <ScreenHeader title="Historique" />
+        <View style={styles.empty}>
+          <Text style={styles.emptyTitle}>Connecte-toi</Text>
+          <Text style={styles.emptyText}>
+            Connecte-toi pour retrouver l’historique de tes commandes.
+          </Text>
+          <Button label="Se connecter" onPress={() => router.push('/login')} style={styles.emptyBtn} />
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer>
-      <ScreenHeader title="Mes commandes" />
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {ongoing.length > 0 ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>En cours</Text>
-            <View style={styles.list}>
-              {ongoing.map((order) => (
-                <OngoingOrderCard key={order.id} order={order} />
-              ))}
-            </View>
-          </View>
-        ) : null}
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Historique</Text>
+      <ScreenHeader title="Historique" />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            tintColor={theme.colors.gold}
+            colors={[theme.colors.gold]}
+          />
+        }
+      >
+        {past.length > 0 ? (
           <View style={styles.list}>
             {past.map((item) => (
               <View key={item.id} style={styles.card}>
@@ -60,7 +76,9 @@ export default function OrdersScreen() {
               </View>
             ))}
           </View>
-        </View>
+        ) : (
+          <Text style={styles.noneText}>Tu n’as pas encore de commande terminée.</Text>
+        )}
       </ScrollView>
     </ScreenContainer>
   );
@@ -72,13 +90,6 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing.sm,
     paddingBottom: theme.spacing.huge,
     gap: theme.spacing.xl,
-  },
-  section: {
-    gap: theme.spacing.md,
-  },
-  sectionTitle: {
-    ...theme.typography.label,
-    color: theme.colors.goldDark,
   },
   list: {
     gap: theme.spacing.md,
@@ -123,5 +134,31 @@ const styles = StyleSheet.create({
     fontFamily: theme.fontFamily.display,
     fontSize: 22,
     color: theme.colors.goldDark,
+  },
+  empty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing.xxl,
+    gap: theme.spacing.md,
+  },
+  emptyTitle: {
+    ...theme.typography.h2,
+    color: theme.colors.espresso,
+  },
+  emptyText: {
+    ...theme.typography.body,
+    color: theme.colors.textMuted,
+    textAlign: 'center',
+  },
+  emptyBtn: {
+    marginTop: theme.spacing.md,
+    alignSelf: 'stretch',
+  },
+  noneText: {
+    ...theme.typography.body,
+    color: theme.colors.textMuted,
+    textAlign: 'center',
+    marginTop: theme.spacing.xxl,
   },
 });

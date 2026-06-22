@@ -95,6 +95,7 @@ export const mapOngoingOrder = (d: CommandDTO): OngoingOrder => {
     tableNumber: d.Table?.numero,
     total: num(d.total_price),
     placedAtLabel: formatDateTime(dateOf(d)),
+    createdAt: dateOf(d).toISOString(),
     items: (d.CommandItems ?? []).map((it) => ({
       name: it.Item?.name ?? 'Article',
       quantity: it.quantity ?? 1,
@@ -109,4 +110,5 @@ export const mapOrderSummary = (d: CommandDTO): OrderSummary => ({
   stateLabel: d.StateCommand?.state ?? '',
   total: num(d.total_price),
   itemCount: itemCountOf(d),
+  createdAt: dateOf(d).toISOString(),
 });

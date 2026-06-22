@@ -2,25 +2,24 @@ import CoffeeCarousel from '@/src/components/home/CoffeeCarousel';
 import CoffeeStage3D from '@/src/components/home/CoffeeStage3D';
 import Button from '@/src/components/ui/Button';
 import ScreenContainer from '@/src/components/ui/ScreenContainer';
+import { useLiveData } from '@/src/hooks/useLiveData';
 import { menuService } from '@/src/services/menuService';
 import { theme } from '@/src/theme';
-import { Item } from '@/src/types';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 export default function AccueilScreen() {
   const router = useRouter();
-  const [items, setItems] = useState<Item[]>([]);
+  const { data } = useLiveData(() => menuService.getFeaturedItems());
+  const items = data ?? [];
   const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    menuService.getFeaturedItems().then(setItems);
-  }, []);
 
   if (items.length === 0) return <ScreenContainer />;
 
-  const current = items[index];
+  // Clamp : la liste peut rétrécir après un refetch.
+  const safeIndex = Math.min(index, items.length - 1);
+  const current = items[safeIndex];
   const prev = () => setIndex((i) => (i - 1 + items.length) % items.length);
   const next = () => setIndex((i) => (i + 1) % items.length);
 
@@ -36,7 +35,7 @@ export default function AccueilScreen() {
       <View style={styles.bottom}>
         <CoffeeCarousel
           item={current}
-          index={index}
+          index={safeIndex}
           total={items.length}
           onPrev={prev}
           onNext={next}
@@ -69,7 +68,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bottom: {
-    gap: theme.spacing.xl,
+    gap: theme.spacing.md,
     paddingBottom: theme.spacing.xl,
   },
   cta: {
