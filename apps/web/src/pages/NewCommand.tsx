@@ -37,7 +37,7 @@ export default function NewCommand() {
   const setQty = (itemId: number, delta: number) =>
     setQuantities(prev => {
       const next = Math.max(0, (prev[itemId] ?? 0) + delta)
-      if (next === 0) { const { [itemId]: _, ...rest } = prev; return rest }
+      if (next === 0) { const nextQty = { ...prev }; delete nextQty[itemId]; return nextQty }
       return { ...prev, [itemId]: next }
     })
 
