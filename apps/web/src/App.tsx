@@ -5,7 +5,6 @@ import Commands from './pages/Commands'
 import Dashboard from './pages/Dashboard'
 import ItemOptions from './pages/ItemOptions'
 import Items from './pages/Items'
-import NewCommand from './pages/NewCommand'
 import StateCommands from './pages/StateCommands'
 import Tables from './pages/Tables'
 import Users from './pages/Users'
@@ -22,7 +21,6 @@ export default function App() {
           <Route path="/categories" element={<Categories />} />
           <Route path="/item-options" element={<ItemOptions />} />
           <Route path="/commands" element={<Commands />} />
-          <Route path="/commands/new" element={<NewCommand />} />
           <Route path="/tables" element={<Tables />} />
           <Route path="/state-commands" element={<StateCommands />} />
         </Route>
