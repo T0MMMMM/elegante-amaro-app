@@ -1,39 +1,36 @@
-import { config } from '@/src/constants/config';
+import { fidelityStatus } from '@/src/lib/fidelity';
 import { theme } from '@/src/theme';
-import { Gift } from 'lucide-react-native';
+import { Crown } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
 interface Props {
   points: number;
 }
 
-/** Carte fidélité (points + progression vers la prochaine récompense). */
+/** Carte de membre : statut (palier) + privilège + progression vers le cercle suivant. */
 export default function FidelityCard({ points }: Props) {
-  const goal = config.fidelityGoal;
-  const progress = Math.min(1, points / goal);
-  const remaining = Math.max(0, goal - points);
+  const { tier, next, progress, toNext } = fidelityStatus(points);
 
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
-        <Text style={styles.overline}>Programme fidélité</Text>
-        <Gift size={20} color={theme.colors.gold} strokeWidth={2} />
+        <Text style={styles.overline}>Cercle Elegante Amaro</Text>
+        <Crown size={18} color={theme.colors.gold} strokeWidth={2} />
       </View>
 
-      <View style={styles.pointsRow}>
-        <Text style={styles.points}>{points}</Text>
-        <Text style={styles.pointsLabel}>points</Text>
-      </View>
+      <Text style={styles.tier}>{tier.name}</Text>
+      <Text style={styles.perk}>{tier.perk}</Text>
 
       <View style={styles.track}>
         <View style={[styles.fill, { width: `${progress * 100}%` }]} />
       </View>
 
-      <Text style={styles.hint}>
-        {remaining > 0
-          ? `Plus que ${remaining} points avant votre boisson offerte`
-          : 'Une boisson offerte vous attend !'}
-      </Text>
+      <View style={styles.footerRow}>
+        <Text style={styles.points}>{points} points</Text>
+        <Text style={styles.hint}>
+          {next ? `Plus que ${toNext} avant ${next.name}` : 'Cercle au sommet atteint'}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -43,7 +40,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.espresso,
     borderRadius: theme.radius.xl,
     padding: theme.spacing.xl,
-    gap: theme.spacing.md,
+    gap: theme.spacing.sm,
     ...theme.shadows.card,
   },
   headerRow: {
@@ -55,24 +52,22 @@ const styles = StyleSheet.create({
     ...theme.typography.label,
     color: theme.colors.gold,
   },
-  pointsRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: theme.spacing.sm,
-  },
-  points: {
+  tier: {
     fontFamily: theme.fontFamily.display,
-    fontSize: 56,
-    color: theme.colors.cream,
+    fontSize: 40,
     letterSpacing: 1,
+    color: theme.colors.cream,
+    marginTop: theme.spacing.xs,
   },
-  pointsLabel: {
+  perk: {
     fontFamily: theme.fontFamily.body,
-    fontSize: 14,
-    color: theme.colors.textMuted,
+    fontSize: 13,
+    color: theme.colors.cream,
+    opacity: 0.85,
+    marginBottom: theme.spacing.xs,
   },
   track: {
-    height: 8,
+    height: 6,
     borderRadius: theme.radius.pill,
     backgroundColor: 'rgba(255,250,237,0.15)',
     overflow: 'hidden',
@@ -82,10 +77,20 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.gold,
   },
-  hint: {
-    fontFamily: theme.fontFamily.body,
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: theme.spacing.xs,
+  },
+  points: {
+    fontFamily: theme.fontFamily.bodySemibold,
     fontSize: 13,
     color: theme.colors.cream,
-    opacity: 0.85,
+  },
+  hint: {
+    fontFamily: theme.fontFamily.body,
+    fontSize: 12,
+    color: theme.colors.textMuted,
   },
 });

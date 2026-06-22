@@ -1,4 +1,5 @@
 import PressableScale from '@/src/components/ui/PressableScale';
+import { haptics } from '@/src/lib/haptics';
 import { theme } from '@/src/theme';
 import { Minus, Plus } from 'lucide-react-native';
 import { useEffect, useRef } from 'react';
@@ -34,10 +35,15 @@ export default function QuantityStepper({ value, onChange, min = 1, max = 99, si
     }).start();
   }, [value, pop]);
 
+  const step = (next: number) => {
+    haptics.selection();
+    onChange(next);
+  };
+
   return (
     <View style={styles.row}>
       <PressableScale
-        onPress={() => onChange(Math.max(min, value - 1))}
+        onPress={() => step(Math.max(min, value - 1))}
         disabled={value <= min}
         style={[styles.btn, { width: dim, height: dim }, value <= min && styles.btnDisabled]}
       >
@@ -47,7 +53,7 @@ export default function QuantityStepper({ value, onChange, min = 1, max = 99, si
       <Animated.Text style={[styles.value, { transform: [{ scale: pop }] }]}>{value}</Animated.Text>
 
       <PressableScale
-        onPress={() => onChange(Math.min(max, value + 1))}
+        onPress={() => step(Math.min(max, value + 1))}
         disabled={value >= max}
         style={[styles.btn, { width: dim, height: dim }, value >= max && styles.btnDisabled]}
       >

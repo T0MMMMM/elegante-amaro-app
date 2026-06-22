@@ -43,7 +43,7 @@ export default function CommandeScreen() {
   return (
     <ScreenContainer>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <SectionHeader overline="Votre sélection" title="Panier" />
+        <SectionHeader overline="Votre sélection" title="Votre panier" />
 
         <View style={styles.lines}>
           {lines.map((line) => (
@@ -56,12 +56,12 @@ export default function CommandeScreen() {
           ))}
         </View>
 
-        <Text style={styles.blockTitle}>Mode de service</Text>
+        <Text style={styles.blockTitle}>Votre service</Text>
         <OrderTypeSelector types={types} selectedId={typeId} onSelect={setType} />
 
         {typeId === 1 ? (
           <>
-            <Text style={styles.blockTitle}>Numéro de table</Text>
+            <Text style={styles.blockTitle}>Votre table</Text>
             <TableSelector tables={tables} selectedId={tableId} onSelect={setTable} />
           </>
         ) : null}

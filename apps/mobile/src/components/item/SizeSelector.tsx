@@ -1,4 +1,5 @@
 import PressableScale from '@/src/components/ui/PressableScale';
+import { haptics } from '@/src/lib/haptics';
 import { theme } from '@/src/theme';
 import { SIZES, Size } from '@/src/types';
 import { Coffee } from 'lucide-react-native';
@@ -27,7 +28,10 @@ export default function SizeSelector({ value, onChange }: Props) {
           size={s.value}
           label={s.label}
           selected={s.value === value}
-          onPress={() => onChange(s.value)}
+          onPress={() => {
+            haptics.selection();
+            onChange(s.value);
+          }}
         />
       ))}
     </Animated.View>

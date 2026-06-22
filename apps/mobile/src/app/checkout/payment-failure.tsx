@@ -1,12 +1,19 @@
 import Button from '@/src/components/ui/Button';
+import FadeInView from '@/src/components/ui/FadeInView';
+import { haptics } from '@/src/lib/haptics';
 import { theme } from '@/src/theme';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 export default function PaymentFailureScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ guestName?: string; guestEmail?: string }>();
+
+  useEffect(() => {
+    haptics.error();
+  }, []);
 
   const retry = () => {
     router.replace({
@@ -20,14 +27,18 @@ export default function PaymentFailureScreen() {
 
   return (
     <View style={styles.root}>
-      <View style={styles.circle}>
-        <X size={56} color={theme.colors.cream} strokeWidth={3} />
-      </View>
+      <FadeInView style={styles.center} offset={18}>
+        <View style={styles.circle}>
+          <X size={56} color={theme.colors.cream} strokeWidth={3} />
+        </View>
+      </FadeInView>
 
-      <Text style={styles.title}>Paiement refusé</Text>
-      <Text style={styles.subtitle}>
-        Ton paiement n’a pas pu être traité. Ton panier est conservé, tu peux réessayer.
-      </Text>
+      <FadeInView delay={140} style={styles.center}>
+        <Text style={styles.title}>Paiement refusé</Text>
+        <Text style={styles.subtitle}>
+          Votre paiement n’a pas pu être traité. Votre panier est conservé, vous pouvez réessayer.
+        </Text>
+      </FadeInView>
 
       <Button label="Réessayer le paiement" onPress={retry} style={styles.button} />
       <Button
@@ -48,6 +59,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: theme.spacing.xxl,
     gap: theme.spacing.lg,
+  },
+  center: {
+    alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   circle: {
     width: 110,

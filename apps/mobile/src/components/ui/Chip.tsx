@@ -1,4 +1,5 @@
 import PressableScale from '@/src/components/ui/PressableScale';
+import { haptics } from '@/src/lib/haptics';
 import { theme } from '@/src/theme';
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
@@ -24,8 +25,13 @@ export default function Chip({ label, selected = false, onPress }: Props) {
     }).start();
   }, [selected, pop]);
 
+  const handlePress = () => {
+    haptics.selection();
+    onPress?.();
+  };
+
   return (
-    <PressableScale onPress={onPress} scaleTo={0.92} style={styles.shell}>
+    <PressableScale onPress={handlePress} scaleTo={0.92} style={styles.shell}>
       <Animated.View
         style={[
           styles.chip,

@@ -1,4 +1,5 @@
 import PressableScale from '@/src/components/ui/PressableScale';
+import { haptics } from '@/src/lib/haptics';
 import { theme } from '@/src/theme';
 import { CommandType } from '@/src/types';
 import { LucideIcon, ShoppingBag, Utensils } from 'lucide-react-native';
@@ -26,7 +27,10 @@ export default function OrderTypeSelector({ types, selectedId, onSelect }: Props
           key={t.id}
           type={t}
           selected={t.id === selectedId}
-          onPress={() => onSelect(t.id)}
+          onPress={() => {
+            haptics.selection();
+            onSelect(t.id);
+          }}
         />
       ))}
     </View>

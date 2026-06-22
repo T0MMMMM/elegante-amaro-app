@@ -1,5 +1,6 @@
 import PressableScale from '@/src/components/ui/PressableScale';
 import { formatPrice } from '@/src/constants/config';
+import { haptics } from '@/src/lib/haptics';
 import { theme } from '@/src/theme';
 import { ItemOption } from '@/src/types';
 import { Check } from 'lucide-react-native';
@@ -27,8 +28,13 @@ export default function OptionToggle({ option, selected, onToggle }: Props) {
 
   const checkScale = anim.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] });
 
+  const handleToggle = () => {
+    haptics.selection();
+    onToggle();
+  };
+
   return (
-    <PressableScale onPress={onToggle} scaleTo={0.97} style={styles.row}>
+    <PressableScale onPress={handleToggle} scaleTo={0.97} style={styles.row}>
       <Animated.View style={[styles.box, selected ? styles.boxOn : styles.boxOff]}>
         <Animated.View style={{ opacity: anim, transform: [{ scale: checkScale }] }}>
           <Check size={14} color={theme.colors.espresso} strokeWidth={3} />

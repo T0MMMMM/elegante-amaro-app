@@ -46,7 +46,7 @@ export default function ProfilScreen() {
             </View>
             <Text style={styles.guestTitle}>Bienvenue</Text>
             <Text style={styles.guestSubtitle}>
-              Connecte-toi pour suivre tes commandes et cumuler des points fidélité.
+              Connectez-vous pour suivre vos commandes et rejoindre le cercle Elegante Amaro.
             </Text>
           </View>
 

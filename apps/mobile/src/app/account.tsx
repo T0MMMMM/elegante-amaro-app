@@ -51,8 +51,8 @@ export default function AccountScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <Text style={styles.note}>
-            Ces informations correspondent à ton compte. Laisse le mot de passe vide pour ne pas le
-            changer.
+            Ces informations correspondent à votre compte. Laissez le mot de passe vide pour ne pas
+            le changer.
           </Text>
 
           <FormField label="Nom complet" value={name} onChangeText={setName} autoCapitalize="words" />

@@ -23,11 +23,11 @@ export default function GuestInfoScreen() {
 
   const handleNext = () => {
     if (!name.trim()) {
-      setError('Renseigne ton nom complet.');
+      setError('Veuillez renseigner votre nom complet.');
       return;
     }
     if (!EMAIL_RE.test(email.trim())) {
-      setError('Renseigne un email valide.');
+      setError('Veuillez renseigner un email valide.');
       return;
     }
     setError(null);
@@ -50,7 +50,7 @@ export default function GuestInfoScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <Text style={styles.note}>
-            Tu commandes en tant qu’invité. Ces informations servent à identifier ta commande.
+            Vous commandez en tant qu’invité. Ces informations servent à identifier votre commande.
           </Text>
 
           <FormField

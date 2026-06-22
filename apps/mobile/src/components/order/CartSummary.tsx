@@ -2,6 +2,7 @@ import Button from '@/src/components/ui/Button';
 import Divider from '@/src/components/ui/Divider';
 import { formatPrice } from '@/src/constants/config';
 import { CartTotals } from '@/src/hooks/useCartTotals';
+import { haptics } from '@/src/lib/haptics';
 import { theme } from '@/src/theme';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -25,8 +26,11 @@ export default function CartSummary({ totals, onValidate, disabled }: Props) {
       <Line label="Total" value={formatPrice(totals.total)} strong />
 
       <Button
-        label="Valider la commande"
-        onPress={onValidate}
+        label="Confirmer la commande"
+        onPress={() => {
+          haptics.light();
+          onValidate();
+        }}
         disabled={disabled}
         style={styles.button}
       />

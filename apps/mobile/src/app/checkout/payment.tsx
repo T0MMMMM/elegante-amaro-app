@@ -4,6 +4,7 @@ import ScreenContainer from '@/src/components/ui/ScreenContainer';
 import ScreenHeader from '@/src/components/ui/ScreenHeader';
 import { formatPrice } from '@/src/constants/config';
 import { useCartTotals } from '@/src/hooks/useCartTotals';
+import { haptics } from '@/src/lib/haptics';
 import { theme } from '@/src/theme';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Lock } from 'lucide-react-native';
@@ -32,6 +33,7 @@ export default function PaymentScreen() {
   const [processing, setProcessing] = useState(false);
 
   const handlePay = () => {
+    haptics.light();
     setProcessing(true);
     // Faux traitement bancaire : délai puis issue aléatoire.
     setTimeout(() => {

@@ -31,9 +31,9 @@ export default function OrdersScreen() {
       <ScreenContainer>
         <ScreenHeader title="Historique" />
         <View style={styles.empty}>
-          <Text style={styles.emptyTitle}>Connecte-toi</Text>
+          <Text style={styles.emptyTitle}>Connectez-vous</Text>
           <Text style={styles.emptyText}>
-            Connecte-toi pour retrouver l’historique de tes commandes.
+            Connectez-vous pour retrouver l’historique de vos commandes.
           </Text>
           <Button label="Se connecter" onPress={() => router.push('/login')} style={styles.emptyBtn} />
         </View>
@@ -77,7 +77,7 @@ export default function OrdersScreen() {
             ))}
           </View>
         ) : (
-          <Text style={styles.noneText}>Tu n’as pas encore de commande terminée.</Text>
+          <Text style={styles.noneText}>Vous n’avez pas encore de commande terminée.</Text>
         )}
       </ScrollView>
     </ScreenContainer>

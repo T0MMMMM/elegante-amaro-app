@@ -1,6 +1,8 @@
 import Button from '@/src/components/ui/Button';
+import FadeInView from '@/src/components/ui/FadeInView';
 import { formatPrice } from '@/src/constants/config';
 import { useCartTotals } from '@/src/hooks/useCartTotals';
+import { haptics } from '@/src/lib/haptics';
 import { orderService } from '@/src/services/orderService';
 import { userService } from '@/src/services/userService';
 import { useAuth } from '@/src/store/auth/AuthContext';
@@ -24,6 +26,11 @@ export default function PaymentSuccessScreen() {
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const created = useRef(false);
+
+  // Le paiement est accepté : retour haptique de succès à l'arrivée.
+  useEffect(() => {
+    haptics.success();
+  }, []);
 
   // Crée la commande une seule fois, à l'arrivée sur l'écran.
   useEffect(() => {
@@ -76,22 +83,28 @@ export default function PaymentSuccessScreen() {
 
   return (
     <View style={styles.root}>
-      <View style={styles.circle}>
-        <Check size={56} color={theme.colors.cream} strokeWidth={3} />
-      </View>
+      <FadeInView style={styles.center} offset={18}>
+        <View style={styles.circle}>
+          <Check size={56} color={theme.colors.cream} strokeWidth={3} />
+        </View>
+      </FadeInView>
 
-      <Text style={styles.title}>Paiement validé</Text>
-      <Text style={styles.subtitle}>Ton paiement de {formatPrice(amount)} a bien été accepté.</Text>
+      <FadeInView delay={140} style={styles.center}>
+        <Text style={styles.title}>Paiement accepté</Text>
+        <Text style={styles.subtitle}>
+          Votre règlement de {formatPrice(amount)} a bien été accepté.
+        </Text>
+      </FadeInView>
 
       {pending ? (
         <View style={styles.pending}>
           <ActivityIndicator color={theme.colors.gold} />
-          <Text style={styles.pendingText}>Enregistrement de ta commande…</Text>
+          <Text style={styles.pendingText}>Enregistrement de votre commande…</Text>
         </View>
       ) : null}
 
       {orderNumber ? (
-        <View style={styles.recap}>
+        <FadeInView delay={120} style={styles.recap}>
           <View style={styles.recapRow}>
             <Text style={styles.recapLabel}>Commande</Text>
             <Text style={styles.recapValue}>{orderNumber}</Text>
@@ -104,7 +117,7 @@ export default function PaymentSuccessScreen() {
             <Text style={styles.recapLabel}>Total payé</Text>
             <Text style={styles.recapTotal}>{formatPrice(amount)}</Text>
           </View>
-        </View>
+        </FadeInView>
       ) : null}
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -127,6 +140,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: theme.spacing.xxl,
     gap: theme.spacing.lg,
+  },
+  center: {
+    alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   circle: {
     width: 110,

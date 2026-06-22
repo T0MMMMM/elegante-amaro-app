@@ -1,8 +1,10 @@
 import AddToCartBar from '@/src/components/item/AddToCartBar';
 import OptionToggle from '@/src/components/item/OptionToggle';
 import SizeSelector from '@/src/components/item/SizeSelector';
+import FadeInView from '@/src/components/ui/FadeInView';
 import Price from '@/src/components/ui/Price';
 import QuantityStepper from '@/src/components/ui/QuantityStepper';
+import ScreenLoader from '@/src/components/ui/ScreenLoader';
 import { menuService } from '@/src/services/menuService';
 import { useCart } from '@/src/store/cart/CartContext';
 import { unitPrice } from '@/src/store/cart/cartReducer';
@@ -47,7 +49,7 @@ export default function ItemDetailScreen() {
     [item, selectedOptions, quantity],
   );
 
-  if (!item) return <View style={styles.root} />;
+  if (!item) return <ScreenLoader />;
 
   const toggleOption = (id: number) =>
     setSelectedIds((prev) =>
@@ -74,18 +76,21 @@ export default function ItemDetailScreen() {
         </View>
 
         <View style={styles.body}>
-          <Text style={styles.name}>{item.name}</Text>
-          <Price value={item.price} size={28} />
-          <Text style={styles.description}>{item.description}</Text>
+          <FadeInView delay={60}>
+            <Text style={styles.overline}>Notre création</Text>
+            <Text style={styles.name}>{item.name}</Text>
+            <Price value={item.price} size={28} animate={false} />
+            <Text style={styles.description}>{item.description}</Text>
+          </FadeInView>
 
-          <View style={styles.section}>
+          <FadeInView delay={140} style={styles.section}>
             <Text style={styles.sectionTitle}>Taille</Text>
             <SizeSelector value={size} onChange={setSize} />
-          </View>
+          </FadeInView>
 
           {options.length > 0 ? (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Extras</Text>
+            <FadeInView delay={200} style={styles.section}>
+              <Text style={styles.sectionTitle}>Personnalisez</Text>
               <View>
                 {options.map((opt) => (
                   <OptionToggle
@@ -96,13 +101,13 @@ export default function ItemDetailScreen() {
                   />
                 ))}
               </View>
-            </View>
+            </FadeInView>
           ) : null}
 
-          <View style={[styles.section, styles.qtyRow]}>
+          <FadeInView delay={260} style={[styles.section, styles.qtyRow]}>
             <Text style={styles.sectionTitle}>Quantité</Text>
             <QuantityStepper value={quantity} onChange={setQuantity} />
-          </View>
+          </FadeInView>
         </View>
       </ScrollView>
 
@@ -138,6 +143,11 @@ const styles = StyleSheet.create({
   body: {
     padding: theme.spacing.xl,
     gap: theme.spacing.md,
+  },
+  overline: {
+    ...theme.typography.label,
+    color: theme.colors.goldDark,
+    marginBottom: theme.spacing.xs,
   },
   name: {
     ...theme.typography.h1,

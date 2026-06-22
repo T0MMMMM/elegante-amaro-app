@@ -32,7 +32,7 @@ export default function LoginScreen() {
 
   const handleSubmit = async () => {
     if (!email.trim() || !password) {
-      setError('Renseigne ton email et ton mot de passe.');
+      setError('Veuillez renseigner votre email et votre mot de passe.');
       return;
     }
     setLoading(true);
@@ -70,7 +70,7 @@ export default function LoginScreen() {
           <View style={styles.header}>
             <Text style={styles.overline}>Bienvenue chez</Text>
             <Text style={styles.logo}>Elegante Amaro</Text>
-            <Text style={styles.subtitle}>Connecte-toi à ton compte</Text>
+            <Text style={styles.subtitle}>Heureux de vous revoir</Text>
           </View>
 
           <View style={styles.form}>

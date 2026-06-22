@@ -30,6 +30,8 @@ export default function RootLayout() {
               screenOptions={{
                 headerShown: false,
                 contentStyle: { backgroundColor: theme.colors.background },
+                animation: 'fade',
+                animationDuration: 280,
               }}
             />
           </CartProvider>

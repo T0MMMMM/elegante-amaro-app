@@ -80,7 +80,7 @@ export default function RegisterScreen() {
           <View style={styles.header}>
             <Text style={styles.overline}>Rejoignez</Text>
             <Text style={styles.logo}>Elegante Amaro</Text>
-            <Text style={styles.subtitle}>Créez votre compte</Text>
+            <Text style={styles.subtitle}>Entrez dans le cercle</Text>
           </View>
 
           <View style={styles.form}>
