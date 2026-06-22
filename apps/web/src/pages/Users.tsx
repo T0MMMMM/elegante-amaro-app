@@ -37,8 +37,12 @@ export default function Users() {
 
   const handleDelete = async (row: User) => {
     if (!confirm(`Supprimer ${row.name} ?`)) return
-    await deleteUser(row.id)
-    setData(prev => prev.filter(u => u.id !== row.id))
+    try {
+      await deleteUser(row.id)
+      setData(prev => prev.filter(u => u.id !== row.id))
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Erreur lors de la suppression')
+    }
   }
 
   const handleSubmit = async () => {
