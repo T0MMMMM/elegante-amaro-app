@@ -309,7 +309,9 @@ export default function Dashboard() {
       <div style={styles.actionsRow}>
         <ActionBtn label="Créer une commande" onClick={() => navigate('/new-command')} />
         <div style={styles.btnDivider} />
-        <ActionBtn label="Historique des commandes" onClick={() => navigate('/commands')} />
+        <ActionBtn label="Suivi des commandes" onClick={() => navigate('/commands-board')} />
+        <div style={styles.btnDivider} />
+        <ActionBtn label="Commandes" onClick={() => navigate('/commands')} />
       </div>
 
       {/* ── Scrollable orders ───────────────────────────────── */}

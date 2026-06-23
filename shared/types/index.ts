@@ -58,6 +58,11 @@ export interface StateCommand {
   id: number
   state: string
   deleted_at?: string | null
+  position?: number | null
+  color?: string | null
+  quick_action_enabled?: boolean
+  icon?: string | null
+  hidden_in_board?: boolean
 }
 
 export interface CommandType {

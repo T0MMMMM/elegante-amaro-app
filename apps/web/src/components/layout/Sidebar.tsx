@@ -8,7 +8,7 @@ const links = [
   { to: '/items', label: 'Articles' },
   { to: '/categories', label: 'Catégories' },
   { to: '/item-options', label: 'Options' },
-  { to: '/commands', label: 'Historique' },
+  { to: '/commands', label: 'Commandes' },
   { to: '/tables', label: 'Tables' },
   { to: '/state-commands', label: 'Statuts' },
 ]

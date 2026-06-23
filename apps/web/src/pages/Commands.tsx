@@ -85,7 +85,7 @@ export default function Commands() {
     },
     {
       key: 'state_command_id', label: 'Statut', width: '16%',
-      render: v => stateCommands.find(s => s.id === v)?.state ?? String(v),
+      render: v => <span style={{ textTransform: 'uppercase' }}>{stateCommands.find(s => s.id === v)?.state ?? String(v)}</span>,
       filter: {
         options: stateCommands.map(s => ({ value: s.id, label: s.state })),
         selected: statusFilter,
@@ -175,7 +175,7 @@ export default function Commands() {
   return (
     <div>
       <div style={styles.header}>
-        <h1 style={styles.pageTitle}>Historique des commandes</h1>
+        <h1 style={styles.pageTitle}>Commandes</h1>
       </div>
 
       <PageShell loading={loading} error={error}>

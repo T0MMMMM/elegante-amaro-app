@@ -2,11 +2,20 @@ import StateCommand from "../models/state_commands.model.js";
 import Command from "../models/commands.model.js";
 
 export const getAll = async (includeDeleted = false) =>
-  StateCommand.findAll(includeDeleted ? {} : { where: { deleted_at: null } });
+  StateCommand.findAll({
+    where: includeDeleted ? {} : { deleted_at: null },
+    order: [["position", "ASC"], ["id", "ASC"]]
+  });
 
 export const getById = async (id) => StateCommand.findByPk(id);
 
-export const create = async (data) => StateCommand.create(data);
+export const create = async (data) => {
+  if (data.position == null) {
+    const last = await StateCommand.findOne({ order: [["position", "DESC"]] });
+    data = { ...data, position: (last?.position ?? 0) + 1 };
+  }
+  return StateCommand.create(data);
+};
 
 export const update = async (id, data) => {
   const record = await StateCommand.findByPk(id);

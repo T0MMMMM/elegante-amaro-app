@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import Layout from './components/layout/Layout'
 import Categories from './pages/Categories'
 import Commands from './pages/Commands'
+import CommandsBoard from './pages/CommandsBoard'
 import Dashboard from './pages/Dashboard'
 import ItemOptions from './pages/ItemOptions'
 import Items from './pages/Items'
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/categories" element={<Categories />} />
           <Route path="/item-options" element={<ItemOptions />} />
           <Route path="/commands" element={<Commands />} />
+          <Route path="/commands-board" element={<CommandsBoard />} />
           <Route path="/tables" element={<Tables />} />
           <Route path="/state-commands" element={<StateCommands />} />
           <Route path="/new-command" element={<NewCommand />} />
