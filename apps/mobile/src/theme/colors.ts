@@ -1,36 +1,39 @@
 /**
- * Palette « crème raffiné » — validée avec l'utilisateur.
- * Base : crème #FFFAED, espresso #2A1F15, accent doré/cuivre #BF9D7B.
+ * Palette mobile — dérivée de la source unique partagée (@elegante-amaro-app/shared).
+ * Aucune valeur hex n'est définie ici : on ne fait que mapper les tokens de marque
+ * partagés vers les noms attendus par les composants mobile.
  */
+import { colors as shared } from '@elegante-amaro-app/shared/constants/colors';
+
 export const colors = {
   // base
-  cream: '#FFFAED',
-  espresso: '#2A1F15',
-  gold: '#BF9D7B',
-  goldDark: '#A07E54',
+  cream: shared.cream,
+  espresso: shared.espresso,
+  gold: shared.gold,
+  goldDark: shared.goldDark,
 
   // surfaces
-  surface: '#FFFFFF',
-  surfaceAlt: '#F4ECDD',
-  border: '#E7DCC4',
+  surface: shared.cardSurface,
+  surfaceAlt: shared.surfaceAlt,
+  border: shared.borderSoft,
 
   // texte
-  text: '#2A1F15',
-  textMuted: '#8A7E6E',
-  textOnGold: '#2A1F15',
-  textOnDark: '#FFFAED',
+  text: shared.text,
+  textMuted: shared.textMuted,
+  textOnGold: shared.textOnGold,
+  textOnDark: shared.textOnDark,
 
   // états de commande (state_commands)
-  success: '#6B8E5A',
-  warning: '#C9893F',
-  danger: '#B4533F',
+  success: shared.success,
+  warning: shared.warning,
+  danger: shared.dangerBrand,
 
   // divers
-  overlay: 'rgba(42, 31, 21, 0.5)',
+  overlay: shared.overlay,
 
   // alias sémantiques
-  background: '#FFFAED',
-  accent: '#BF9D7B',
+  background: shared.background,
+  accent: shared.accent,
 } as const;
 
 export type ColorToken = keyof typeof colors;

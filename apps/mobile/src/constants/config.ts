@@ -1,8 +1,9 @@
 /** Config globale de l'app (valeurs par défaut, remplaçables côté API). */
 export const config = {
   /**
-   * URL de base de l'API. Définis EXPO_PUBLIC_API_URL dans un .env mobile
-   * (ex: http://192.168.1.20:3000 — l'IP LAN de ta machine pour un téléphone réel).
+   * URL de base de l'API. EXPO_PUBLIC_API_URL est injectée automatiquement par
+   * `scripts/start.sh` (IP LAN de la machine détectée à la volée) ; on peut la
+   * forcer via le .env unique à la racine. Fallback localhost (émulateur/web).
    */
   apiBaseUrl: process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000',
   currency: '€',

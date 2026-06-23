@@ -1,6 +1,12 @@
 {
   "name": "elegante-amaro-app",
   "private": true,
+  "scripts": {
+    "start": "node scripts/start.mjs",
+    "setup": "node scripts/start.mjs --no-apps",
+    "reset-db": "node scripts/start.mjs --reset-db --no-apps",
+    "db:stop": "docker compose down"
+  },
   "workspaces": [
     "apps/*",
     "shared"

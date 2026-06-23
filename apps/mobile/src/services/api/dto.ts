@@ -1,80 +1,61 @@
-import { Size } from '@/src/types';
+import type {
+  Category,
+  Command,
+  CommandItem,
+  CommandType,
+  Item,
+  ItemItemOption,
+  ItemOption,
+  StateCommand,
+  Table,
+  User,
+} from '@elegante-amaro-app/shared/types';
 
 /**
  * Formes exactes renvoyées par l'API (snake_case, décimaux en string).
- * Ne pas utiliser hors des mappers.
+ * Dérivées des types DB partagés (@elegante-amaro-app/shared/types) :
+ * on ne fait qu'assouplir les décimaux (DECIMAL → string|number) et ajouter
+ * les associations Sequelize imbriquées. Ne pas utiliser hors des mappers.
  */
 
-export interface CategoryDTO {
-  id: number;
-  name: string;
-}
+export type CategoryDTO = Category;
 
-export interface ItemOptionDTO {
-  id: number;
-  name: string;
+export interface ItemOptionDTO extends Omit<ItemOption, 'extra_price'> {
   extra_price: string | number;
 }
 
-export interface ItemDTO {
-  id: number;
-  name: string;
-  slug: string;
+export interface ItemDTO extends Omit<Item, 'price' | 'image' | 'created_at' | 'updated_at'> {
   price: string | number;
   image: string | null;
-  category_id: number;
   description?: string | null;
   Category?: CategoryDTO;
 }
 
-export interface ItemItemOptionDTO {
-  id: number;
-  item_id: number;
-  item_option_id: number;
+export interface ItemItemOptionDTO extends ItemItemOption {
   ItemOption?: ItemOptionDTO;
 }
 
-export interface CommandTypeDTO {
-  id: number;
-  name: string;
-}
+export type CommandTypeDTO = CommandType;
 
-export interface TableDTO {
-  id: number;
-  numero: number;
-}
+export type TableDTO = Table;
 
-export interface StateCommandDTO {
-  id: number;
-  state: string;
-}
+export type StateCommandDTO = StateCommand;
 
-export interface UserDTO {
-  id: number;
-  name: string;
-  email: string;
+export interface UserDTO extends Omit<User, 'password_hash' | 'fidelity_points' | 'roles'> {
   /** Présent dans GET /users — mot de passe stocké en clair côté API (démo). */
   password_hash?: string | null;
   fidelity_points: number | null;
   roles: string[] | string | null;
 }
 
-export interface CommandItemDTO {
-  id: number;
-  item_id: number;
-  command_id: number;
-  quantity: number;
+export interface CommandItemDTO extends Omit<CommandItem, 'unit_price' | 'line_total'> {
   unit_price: string | number;
   line_total: string | number;
-  size: Size;
   Item?: { id: number; name: string; price: string | number };
 }
 
-export interface CommandDTO {
-  id: number;
-  user_id: number;
-  type_id: number;
-  state_command_id: number;
+export interface CommandDTO
+  extends Omit<Command, 'total_price' | 'tva_rate' | 'table_id' | 'created_at' | 'updated_at'> {
   total_price: string | number;
   tva_rate: string | number;
   table_id: number | null;

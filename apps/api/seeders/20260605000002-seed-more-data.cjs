@@ -40,33 +40,33 @@ module.exports = {
     // 24 nouveaux items (IDs 13-36)
     await queryInterface.bulkInsert('items', [
       // Boissons chaudes (cat 1)
-      { name: 'Americano',        slug: 'americano',        price: 2.80,  image: null, category_id: 1 },
-      { name: 'Flat White',       slug: 'flat-white',       price: 4.20,  image: null, category_id: 1 },
-      { name: 'Macchiato',        slug: 'macchiato',        price: 3.00,  image: null, category_id: 1 },
-      { name: 'Chocolat chaud',   slug: 'chocolat-chaud',   price: 3.50,  image: null, category_id: 1 },
-      { name: 'Thé vert',         slug: 'the-vert',         price: 3.00,  image: null, category_id: 1 },
-      { name: 'Thé chai',         slug: 'the-chai',         price: 3.20,  image: null, category_id: 1 },
-      { name: 'Matcha latte',     slug: 'matcha-latte',     price: 4.50,  image: null, category_id: 1 },
-      { name: 'Café viennois',    slug: 'cafe-viennois',    price: 4.00,  image: null, category_id: 1 },
+      { name: 'Americano',        slug: 'americano',        price: 2.80,  image: 'https://loremflickr.com/640/480/americano?lock=13', category_id: 1 },
+      { name: 'Flat White',       slug: 'flat-white',       price: 4.20,  image: 'https://loremflickr.com/640/480/flatwhite?lock=14', category_id: 1 },
+      { name: 'Macchiato',        slug: 'macchiato',        price: 3.00,  image: 'https://loremflickr.com/640/480/macchiato?lock=15', category_id: 1 },
+      { name: 'Chocolat chaud',   slug: 'chocolat-chaud',   price: 3.50,  image: 'https://loremflickr.com/640/480/hotchocolate?lock=16', category_id: 1 },
+      { name: 'Thé vert',         slug: 'the-vert',         price: 3.00,  image: 'https://loremflickr.com/640/480/greentea?lock=17', category_id: 1 },
+      { name: 'Thé chai',         slug: 'the-chai',         price: 3.20,  image: 'https://loremflickr.com/640/480/chai?lock=18', category_id: 1 },
+      { name: 'Matcha latte',     slug: 'matcha-latte',     price: 4.50,  image: 'https://loremflickr.com/640/480/matcha?lock=19', category_id: 1 },
+      { name: 'Café viennois',    slug: 'cafe-viennois',    price: 4.00,  image: 'https://loremflickr.com/640/480/coffee?lock=20', category_id: 1 },
       // Boissons froides (cat 2)
-      { name: 'Smoothie fraise',  slug: 'smoothie-fraise',  price: 5.00,  image: null, category_id: 2 },
-      { name: 'Iced Matcha',      slug: 'iced-matcha',      price: 5.20,  image: null, category_id: 2 },
-      { name: 'Eau pétillante',   slug: 'eau-petillante',   price: 2.00,  image: null, category_id: 2 },
-      { name: 'Lemonade gingembre',slug:'lemonade-gingembre',price: 4.80, image: null, category_id: 2 },
-      { name: 'Jus de pomme',     slug: 'jus-pomme',        price: 3.50,  image: null, category_id: 2 },
-      { name: 'Infusion glacée',  slug: 'infusion-glacee',  price: 4.00,  image: null, category_id: 2 },
+      { name: 'Smoothie fraise',  slug: 'smoothie-fraise',  price: 5.00,  image: 'https://loremflickr.com/640/480/strawberrysmoothie?lock=21', category_id: 2 },
+      { name: 'Iced Matcha',      slug: 'iced-matcha',      price: 5.20,  image: 'https://loremflickr.com/640/480/matcha?lock=22', category_id: 2 },
+      { name: 'Eau pétillante',   slug: 'eau-petillante',   price: 2.00,  image: 'https://loremflickr.com/640/480/sparklingwater?lock=23', category_id: 2 },
+      { name: 'Lemonade gingembre',slug:'lemonade-gingembre',price: 4.80, image: 'https://loremflickr.com/640/480/lemonade?lock=24', category_id: 2 },
+      { name: 'Jus de pomme',     slug: 'jus-pomme',        price: 3.50,  image: 'https://loremflickr.com/640/480/applejuice?lock=25', category_id: 2 },
+      { name: 'Infusion glacée',  slug: 'infusion-glacee',  price: 4.00,  image: 'https://loremflickr.com/640/480/icedtea?lock=26', category_id: 2 },
       // Pâtisseries (cat 3)
-      { name: 'Madeleine',        slug: 'madeleine',        price: 1.50,  image: null, category_id: 3 },
-      { name: 'Éclair café',      slug: 'eclair-cafe',      price: 3.80,  image: null, category_id: 3 },
-      { name: 'Muffin myrtille',  slug: 'muffin-myrtille',  price: 2.80,  image: null, category_id: 3 },
-      { name: 'Brownie',          slug: 'brownie',          price: 3.00,  image: null, category_id: 3 },
-      { name: 'Cheesecake',       slug: 'cheesecake',       price: 5.50,  image: null, category_id: 3 },
+      { name: 'Madeleine',        slug: 'madeleine',        price: 1.50,  image: 'https://loremflickr.com/640/480/madeleine?lock=27', category_id: 3 },
+      { name: 'Éclair café',      slug: 'eclair-cafe',      price: 3.80,  image: 'https://loremflickr.com/640/480/eclair?lock=28', category_id: 3 },
+      { name: 'Muffin myrtille',  slug: 'muffin-myrtille',  price: 2.80,  image: 'https://loremflickr.com/640/480/blueberrymuffin?lock=29', category_id: 3 },
+      { name: 'Brownie',          slug: 'brownie',          price: 3.00,  image: 'https://loremflickr.com/640/480/brownie?lock=30', category_id: 3 },
+      { name: 'Cheesecake',       slug: 'cheesecake',       price: 5.50,  image: 'https://loremflickr.com/640/480/cheesecake?lock=31', category_id: 3 },
       // Snacks (cat 4)
-      { name: 'Sandwich poulet',  slug: 'sandwich-poulet',  price: 6.50,  image: null, category_id: 4 },
-      { name: 'Wrap végétalien',  slug: 'wrap-vegetalien',  price: 6.00,  image: null, category_id: 4 },
-      { name: 'Salade César',     slug: 'salade-cesar',     price: 7.50,  image: null, category_id: 4 },
-      { name: 'Granola bowl',     slug: 'granola-bowl',     price: 6.80,  image: null, category_id: 4 },
-      { name: 'Toast avocat',     slug: 'toast-avocat',     price: 7.00,  image: null, category_id: 4 }
+      { name: 'Sandwich poulet',  slug: 'sandwich-poulet',  price: 6.50,  image: 'https://loremflickr.com/640/480/chickensandwich?lock=32', category_id: 4 },
+      { name: 'Wrap végétalien',  slug: 'wrap-vegetalien',  price: 6.00,  image: 'https://loremflickr.com/640/480/wrap?lock=33', category_id: 4 },
+      { name: 'Salade César',     slug: 'salade-cesar',     price: 7.50,  image: 'https://loremflickr.com/640/480/caesarsalad?lock=34', category_id: 4 },
+      { name: 'Granola bowl',     slug: 'granola-bowl',     price: 6.80,  image: 'https://loremflickr.com/640/480/granola?lock=35', category_id: 4 },
+      { name: 'Toast avocat',     slug: 'toast-avocat',     price: 7.00,  image: 'https://loremflickr.com/640/480/avocadotoast?lock=36', category_id: 4 }
     ]);
 
     // Associations items <-> options pour les nouveaux items
