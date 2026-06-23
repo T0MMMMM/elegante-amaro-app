@@ -3,6 +3,7 @@ import { createCategory, deleteCategory, getCategories, updateCategory } from '.
 import { useResource } from '../hooks/useResource'
 import DataTable, { Column, SortDirection } from '../components/ui/DataTable'
 import Modal, { Field, Input } from '../components/ui/Modal'
+import ConfirmDeleteModal from '../components/ui/ConfirmDeleteModal'
 import Button from '../components/ui/Button'
 import PageShell from '../components/ui/PageShell'
 import { theme } from '@elegante-amaro-app/shared/constants'
@@ -49,20 +50,17 @@ export default function Categories() {
   const [editing, setEditing]             = useState<Category | null>(null)
   const [form, setForm]                   = useState({ name: '' })
   const [saving, setSaving]               = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const openCreate = () => { setEditing(null); setForm({ name: '' }); setModalOpen(true) }
   const openEdit   = (row: Category) => { setEditing(row); setForm({ name: row.name }); setModalOpen(true) }
 
-  const handleDelete = async () => {
+  const handleConfirmDelete = async () => {
     if (!editing) return
-    if (!confirm(`Supprimer "${editing.name}" ?`)) return
-    try {
-      await deleteCategory(editing.id)
-      setData(prev => prev.filter(c => c.id !== editing.id))
-      setModalOpen(false)
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Erreur lors de la suppression')
-    }
+    await deleteCategory(editing.id)
+    setData(prev => prev.filter(c => c.id !== editing.id))
+    setConfirmDeleteOpen(false)
+    setModalOpen(false)
   }
 
   const handleSubmit = async () => {
@@ -100,13 +98,21 @@ export default function Categories() {
           onClose={() => setModalOpen(false)}
           onSubmit={handleSubmit}
           submitting={saving}
-          onDelete={editing ? handleDelete : undefined}
-          deleteLabel={editing ? `Supprimer "${editing.name}"` : undefined}
+          onDelete={editing ? () => setConfirmDeleteOpen(true) : undefined}
         >
           <Field label="Nom">
             <Input value={form.name} onChange={e => setForm({ name: e.target.value })} />
           </Field>
         </Modal>
+      )}
+
+      {confirmDeleteOpen && editing && (
+        <ConfirmDeleteModal
+          title="Supprimer la catégorie"
+          message={`Voulez-vous vraiment supprimer la catégorie "${editing.name}" ?`}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirmDeleteOpen(false)}
+        />
       )}
     </div>
   )

@@ -3,6 +3,7 @@ import { createStateCommand, deleteStateCommand, getStateCommands, updateStateCo
 import { useResource } from '../hooks/useResource'
 import DataTable, { Column, SortDirection } from '../components/ui/DataTable'
 import Modal, { Field, Input } from '../components/ui/Modal'
+import ConfirmDeleteModal from '../components/ui/ConfirmDeleteModal'
 import Button from '../components/ui/Button'
 import PageShell from '../components/ui/PageShell'
 import { theme } from '@elegante-amaro-app/shared/constants'
@@ -49,20 +50,17 @@ export default function StateCommands() {
   const [editing, setEditing]             = useState<StateCommand | null>(null)
   const [form, setForm]                   = useState({ state: '' })
   const [saving, setSaving]               = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const openCreate = () => { setEditing(null); setForm({ state: '' }); setModalOpen(true) }
   const openEdit   = (row: StateCommand) => { setEditing(row); setForm({ state: row.state }); setModalOpen(true) }
 
-  const handleDelete = async () => {
+  const handleConfirmDelete = async () => {
     if (!editing) return
-    if (!confirm(`Supprimer le statut "${editing.state}" ?`)) return
-    try {
-      await deleteStateCommand(editing.id)
-      setData(prev => prev.filter(s => s.id !== editing.id))
-      setModalOpen(false)
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Erreur lors de la suppression')
-    }
+    await deleteStateCommand(editing.id)
+    setData(prev => prev.filter(s => s.id !== editing.id))
+    setConfirmDeleteOpen(false)
+    setModalOpen(false)
   }
 
   const handleSubmit = async () => {
@@ -100,13 +98,21 @@ export default function StateCommands() {
           onClose={() => setModalOpen(false)}
           onSubmit={handleSubmit}
           submitting={saving}
-          onDelete={editing ? handleDelete : undefined}
-          deleteLabel={editing ? `Supprimer le statut "${editing.state}"` : undefined}
+          onDelete={editing ? () => setConfirmDeleteOpen(true) : undefined}
         >
           <Field label="Statut">
             <Input value={form.state} onChange={e => setForm({ state: e.target.value })} />
           </Field>
         </Modal>
+      )}
+
+      {confirmDeleteOpen && editing && (
+        <ConfirmDeleteModal
+          title="Supprimer le statut"
+          message={`Voulez-vous vraiment supprimer le statut "${editing.state}" ? Il ne sera plus proposé pour les commandes. Suppression impossible s'il est encore utilisé dans l'historique.`}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirmDeleteOpen(false)}
+        />
       )}
     </div>
   )

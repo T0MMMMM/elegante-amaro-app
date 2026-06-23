@@ -35,6 +35,7 @@ export interface ItemOption {
   id: number
   name: string
   extra_price: number
+  deleted_at?: string | null
 }
 
 /** Junction table: items ↔ item_options */
@@ -56,6 +57,7 @@ export interface Table {
 export interface StateCommand {
   id: number
   state: string
+  deleted_at?: string | null
 }
 
 export interface CommandType {

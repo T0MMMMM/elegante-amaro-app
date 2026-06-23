@@ -32,15 +32,12 @@ export default function Modal({ title, onClose, onSubmit, children, submitting, 
           <Button variant="primary" onClick={onSubmit} disabled={submitting}>
             {submitting ? 'Enregistrement…' : 'Enregistrer'}
           </Button>
-        </div>
-
-        {onDelete && (
-          <div style={styles.dangerZone}>
+          {onDelete && (
             <Button variant="danger" onClick={onDelete}>
               {deleteLabel}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )
@@ -113,12 +110,6 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: 10,
-    padding: '16px 24px 20px',
-    borderTop: `1px solid ${theme.colors.border}`,
-  },
-  dangerZone: {
-    display: 'flex',
-    justifyContent: 'center',
     padding: '16px 24px 20px',
     borderTop: `1px solid ${theme.colors.border}`,
   },

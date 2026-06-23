@@ -7,6 +7,7 @@ import { getUsers }          from '../api/users'
 import { useResource }       from '../hooks/useResource'
 import DataTable, { Column, SortDirection } from '../components/ui/DataTable'
 import Modal, { Field, Select } from '../components/ui/Modal'
+import ConfirmDeleteModal from '../components/ui/ConfirmDeleteModal'
 import PageShell from '../components/ui/PageShell'
 import { renderDate } from '../utils/formatDate'
 import { theme } from '@elegante-amaro-app/shared/constants'
@@ -25,7 +26,7 @@ export default function Commands() {
   const [commandTypes,  setCommandTypes]  = useState<CommandType[]>([])
 
   useEffect(() => {
-    Promise.all([getTables(), getUsers(), getStateCommands(), getCommandTypes()])
+    Promise.all([getTables(), getUsers(), getStateCommands(true), getCommandTypes()])
       .then(([t, u, sc, ct]) => { setTables(t); setUsers(u); setStateCommands(sc); setCommandTypes(ct) })
       .catch(() => {})
   }, [])
@@ -134,6 +135,7 @@ export default function Commands() {
   const [editing, setEditing]     = useState<Command | null>(null)
   const [form, setForm]           = useState(emptyForm)
   const [saving, setSaving]       = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const openEdit = (row: Command) => {
     setEditing(row)
@@ -141,16 +143,12 @@ export default function Commands() {
     setModalOpen(true)
   }
 
-  const handleDelete = async () => {
+  const handleConfirmDelete = async () => {
     if (!editing) return
-    if (!confirm(`Supprimer la commande #${editing.id} ?`)) return
-    try {
-      await deleteCommand(editing.id)
-      setData(prev => prev.filter(c => c.id !== editing.id))
-      setModalOpen(false)
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Erreur lors de la suppression')
-    }
+    await deleteCommand(editing.id)
+    setData(prev => prev.filter(c => c.id !== editing.id))
+    setConfirmDeleteOpen(false)
+    setModalOpen(false)
   }
 
   const handleSubmit = async () => {
@@ -190,8 +188,7 @@ export default function Commands() {
           onClose={() => setModalOpen(false)}
           onSubmit={handleSubmit}
           submitting={saving}
-          onDelete={editing ? handleDelete : undefined}
-          deleteLabel={editing ? `Supprimer la commande #${editing.id}` : undefined}
+          onDelete={editing ? () => setConfirmDeleteOpen(true) : undefined}
         >
           <Field label="Utilisateur">
             <Select value={form.user_id} onChange={set('user_id')}>
@@ -217,7 +214,9 @@ export default function Commands() {
           <Field label="Statut">
             <Select value={form.state_command_id} onChange={set('state_command_id')}>
               <option value={0}>— Choisir un statut —</option>
-              {stateCommands.map(sc => <option key={sc.id} value={sc.id}>{sc.state}</option>)}
+              {stateCommands
+                .filter(sc => !sc.deleted_at || sc.id === form.state_command_id)
+                .map(sc => <option key={sc.id} value={sc.id}>{sc.state}</option>)}
             </Select>
           </Field>
 
@@ -229,6 +228,15 @@ export default function Commands() {
             </Select>
           </Field>
         </Modal>
+      )}
+
+      {confirmDeleteOpen && editing && (
+        <ConfirmDeleteModal
+          title="Supprimer la commande"
+          message={`Voulez-vous vraiment supprimer la commande #${editing.id} ?`}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirmDeleteOpen(false)}
+        />
       )}
     </div>
   )

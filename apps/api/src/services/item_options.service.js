@@ -1,6 +1,6 @@
 import ItemOption from "../models/item_options.model.js";
 
-export const getAll = async () => ItemOption.findAll();
+export const getAll = async () => ItemOption.findAll({ where: { deleted_at: null } });
 
 export const getById = async (id) => ItemOption.findByPk(id);
 
@@ -15,6 +15,6 @@ export const update = async (id, data) => {
 export const remove = async (id) => {
   const record = await ItemOption.findByPk(id);
   if (!record) return null;
-  await record.destroy();
+  await record.update({ deleted_at: new Date() });
   return true;
 };

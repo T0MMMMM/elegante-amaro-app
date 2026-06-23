@@ -42,6 +42,6 @@ export const remove = async (req, res) => {
     if (!result) return res.status(404).json({ message: "Table not found" });
     res.status(204).send();
   } catch (error) {
-    res.status(500).json({ message: error.message || "Internal server error" });
+    res.status(error.status || 500).json({ message: error.message || "Internal server error" });
   }
 };

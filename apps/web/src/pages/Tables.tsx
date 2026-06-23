@@ -3,6 +3,7 @@ import { createTable, deleteTable, getTables, updateTable } from '../api/tables'
 import { useResource } from '../hooks/useResource'
 import DataTable, { Column, SortDirection } from '../components/ui/DataTable'
 import Modal, { Field, Input } from '../components/ui/Modal'
+import ConfirmDeleteModal from '../components/ui/ConfirmDeleteModal'
 import Button from '../components/ui/Button'
 import PageShell from '../components/ui/PageShell'
 import { theme } from '@elegante-amaro-app/shared/constants'
@@ -49,20 +50,17 @@ export default function Tables() {
   const [editing, setEditing]             = useState<Table | null>(null)
   const [form, setForm]                   = useState({ numero: 0 })
   const [saving, setSaving]               = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const openCreate = () => { setEditing(null); setForm({ numero: 0 }); setModalOpen(true) }
   const openEdit   = (row: Table) => { setEditing(row); setForm({ numero: row.numero }); setModalOpen(true) }
 
-  const handleDelete = async () => {
+  const handleConfirmDelete = async () => {
     if (!editing) return
-    if (!confirm(`Supprimer la table #${editing.numero} ?`)) return
-    try {
-      await deleteTable(editing.id)
-      setData(prev => prev.filter(t => t.id !== editing.id))
-      setModalOpen(false)
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Erreur lors de la suppression')
-    }
+    await deleteTable(editing.id)
+    setData(prev => prev.filter(t => t.id !== editing.id))
+    setConfirmDeleteOpen(false)
+    setModalOpen(false)
   }
 
   const handleSubmit = async () => {
@@ -100,13 +98,21 @@ export default function Tables() {
           onClose={() => setModalOpen(false)}
           onSubmit={handleSubmit}
           submitting={saving}
-          onDelete={editing ? handleDelete : undefined}
-          deleteLabel={editing ? `Supprimer la table #${editing.numero}` : undefined}
+          onDelete={editing ? () => setConfirmDeleteOpen(true) : undefined}
         >
           <Field label="Numéro">
             <Input type="number" value={form.numero} onChange={e => setForm({ numero: Number(e.target.value) })} />
           </Field>
         </Modal>
+      )}
+
+      {confirmDeleteOpen && editing && (
+        <ConfirmDeleteModal
+          title="Supprimer la table"
+          message={`Voulez-vous vraiment supprimer la table #${editing.numero} ?`}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirmDeleteOpen(false)}
+        />
       )}
     </div>
   )

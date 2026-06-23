@@ -194,7 +194,7 @@ export default function Dashboard() {
     try {
       const [commands, stateCommands, tables, allCmdItems, allItems] = await Promise.all([
         commandsService.getAll(),
-        stateCommandsService.getAll(),
+        stateCommandsService.getAll(true),
         tablesService.getAll(),
         commandItemsService.getAll(),
         itemsService.getAll(),
@@ -272,7 +272,7 @@ export default function Dashboard() {
   const fmt          = (n: number) =>
     n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
 
-  const displayStates = states.filter(s => !TERMINAL.includes(s.state))
+  const displayStates = states.filter(s => !TERMINAL.includes(s.state) && !s.deleted_at)
 
   if (loading) return (
     <div style={styles.center}>

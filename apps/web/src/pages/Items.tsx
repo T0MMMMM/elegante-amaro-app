@@ -6,6 +6,7 @@ import { createItemItemOption, deleteItemItemOption, getItemsItemOptions } from 
 import { useResource }   from '../hooks/useResource'
 import DataTable, { Column, SortDirection } from '../components/ui/DataTable'
 import Modal, { Field, Input, Select } from '../components/ui/Modal'
+import ConfirmDeleteModal from '../components/ui/ConfirmDeleteModal'
 import MultiSelect from '../components/ui/MultiSelect'
 import Button    from '../components/ui/Button'
 import PageShell from '../components/ui/PageShell'
@@ -136,6 +137,7 @@ export default function Items() {
   const [slugTouched, setSlugTouched]         = useState(false)
   const [selectedOptionIds, setSelectedOptionIds] = useState<number[]>([])
   const [saving, setSaving]                   = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const openCreate = () => {
     setEditing(null)
@@ -153,16 +155,12 @@ export default function Items() {
     setModalOpen(true)
   }
 
-  const handleDelete = async () => {
+  const handleConfirmDelete = async () => {
     if (!editing) return
-    if (!confirm(`Supprimer "${editing.name}" ?`)) return
-    try {
-      await deleteItem(editing.id)
-      setData(prev => prev.filter(i => i.id !== editing.id))
-      setModalOpen(false)
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Erreur lors de la suppression')
-    }
+    await deleteItem(editing.id)
+    setData(prev => prev.filter(i => i.id !== editing.id))
+    setConfirmDeleteOpen(false)
+    setModalOpen(false)
   }
 
   const syncOptionLinks = async (itemId: number) => {
@@ -216,8 +214,7 @@ export default function Items() {
           onClose={() => setModalOpen(false)}
           onSubmit={handleSubmit}
           submitting={saving}
-          onDelete={editing ? handleDelete : undefined}
-          deleteLabel={editing ? `Supprimer "${editing.name}"` : undefined}
+          onDelete={editing ? () => setConfirmDeleteOpen(true) : undefined}
         >
           <Field label="Nom">
             <Input
@@ -258,6 +255,15 @@ export default function Items() {
             />
           </Field>
         </Modal>
+      )}
+
+      {confirmDeleteOpen && editing && (
+        <ConfirmDeleteModal
+          title="Supprimer l'article"
+          message={`Voulez-vous vraiment supprimer l'article "${editing.name}" ?`}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirmDeleteOpen(false)}
+        />
       )}
     </div>
   )
