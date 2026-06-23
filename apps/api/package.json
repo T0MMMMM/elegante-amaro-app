@@ -6,7 +6,13 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:create": "sequelize-cli db:create --config src/config/config.cjs",
+    "db:drop": "sequelize-cli db:drop --config src/config/config.cjs",
+    "db:migrate": "sequelize-cli db:migrate --config src/config/config.cjs",
+    "db:migrate:undo": "sequelize-cli db:migrate:undo:all --config src/config/config.cjs",
+    "db:seed": "sequelize-cli db:seed:all --config src/config/config.cjs",
+    "db:reset": "npm run db:drop && npm run db:create && npm run db:migrate && npm run db:seed"
   },
   "keywords": [],
   "author": "",
