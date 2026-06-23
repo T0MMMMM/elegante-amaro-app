@@ -55,18 +55,22 @@ export const orderService = {
   },
 
   /**
-   * Commandes en cours de l'utilisateur, triées : les commandes « Prête »
-   * (stateStep 3) toujours en tête, puis du plus récent au plus ancien.
+   * Commandes en cours de l'utilisateur, triées : les commandes prêtes
+   * (dernière étape avant un statut final) toujours en tête, puis du plus
+   * récent au plus ancien. La séquence d'étapes vient entièrement du
+   * backoffice (statuts non-finaux visibles sur mobile, triés par position).
    */
   async getOngoingCommands(userId: number): Promise<OngoingOrder[]> {
-    const data = await api.get<CommandDTO[]>('/commands');
+    const [data, states] = await Promise.all([
+      api.get<CommandDTO[]>('/commands'),
+      api.get<StateCommandDTO[]>('/state-commands'),
+    ]);
+    const sequence = states.filter((s) => s.visible_on_mobile !== false && !s.is_final);
     return data
       .filter((d) => d.user_id === userId && isOngoing(d))
-      .map(mapOngoingOrder)
+      .map((d) => mapOngoingOrder(d, sequence))
       .sort((a, b) => {
-        const aReady = a.stateStep === 3;
-        const bReady = b.stateStep === 3;
-        if (aReady !== bReady) return aReady ? -1 : 1;
+        if (a.isReady !== b.isReady) return a.isReady ? -1 : 1;
         return b.createdAt.localeCompare(a.createdAt);
       });
   },
@@ -81,10 +85,10 @@ export const orderService = {
   },
 
   async createCommand(payload: CreateCommandPayload): Promise<Command> {
-    // 1) Trouver l'état « En attente »
+    // 1) Statut initial : le premier statut non-final, dans l'ordre configuré au backoffice.
     const states = await api.get<StateCommandDTO[]>('/state-commands').catch(() => []);
-    const pending = states.find((s) => s.state.toLowerCase().includes('attente'));
-    const stateCommandId = pending?.id ?? states[0]?.id ?? 1;
+    const initial = states.find((s) => !s.is_final);
+    const stateCommandId = initial?.id ?? states[0]?.id ?? 1;
 
     // 2) Créer la commande
     const created = await api.post<CommandDTO>('/commands', {

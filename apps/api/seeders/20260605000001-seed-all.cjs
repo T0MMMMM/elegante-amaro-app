@@ -22,18 +22,18 @@ module.exports = {
 
     // Items
     await queryInterface.bulkInsert('items', [
-      { name: 'Espresso', slug: 'espresso', price: 2.50, image: 'https://loremflickr.com/640/480/espresso?lock=1', category_id: 1 },
-      { name: 'Cappuccino', slug: 'cappuccino', price: 3.80, image: 'https://loremflickr.com/640/480/cappuccino?lock=2', category_id: 1 },
-      { name: 'Latte', slug: 'latte', price: 4.00, image: 'https://loremflickr.com/640/480/latte?lock=3', category_id: 1 },
-      { name: 'Thé Earl Grey', slug: 'the-earl-grey', price: 3.00, image: 'https://loremflickr.com/640/480/tea?lock=4', category_id: 1 },
-      { name: 'Limonade maison', slug: 'limonade-maison', price: 4.50, image: 'https://loremflickr.com/640/480/lemonade?lock=5', category_id: 2 },
-      { name: 'Ice Coffee', slug: 'ice-coffee', price: 4.80, image: 'https://loremflickr.com/640/480/icedcoffee?lock=6', category_id: 2 },
-      { name: 'Jus d\'orange', slug: 'jus-orange', price: 3.50, image: 'https://loremflickr.com/640/480/orangejuice?lock=7', category_id: 2 },
-      { name: 'Croissant', slug: 'croissant', price: 2.20, image: 'https://loremflickr.com/640/480/croissant?lock=8', category_id: 3 },
-      { name: 'Pain au chocolat', slug: 'pain-au-chocolat', price: 2.50, image: 'https://loremflickr.com/640/480/painauchocolat?lock=9', category_id: 3 },
-      { name: 'Tarte aux pommes', slug: 'tarte-aux-pommes', price: 4.20, image: 'https://loremflickr.com/640/480/applepie?lock=10', category_id: 3 },
-      { name: 'Sandwich jambon', slug: 'sandwich-jambon', price: 5.50, image: 'https://loremflickr.com/640/480/hamsandwich?lock=11', category_id: 4 },
-      { name: 'Cookie chocolat', slug: 'cookie-chocolat', price: 1.80, image: 'https://loremflickr.com/640/480/cookie?lock=12', category_id: 4 }
+      { name: 'Espresso', slug: 'espresso', price: 2.50, category_id: 1 },
+      { name: 'Cappuccino', slug: 'cappuccino', price: 3.80, category_id: 1 },
+      { name: 'Latte', slug: 'latte', price: 4.00, category_id: 1 },
+      { name: 'Thé Earl Grey', slug: 'the-earl-grey', price: 3.00, category_id: 1 },
+      { name: 'Limonade maison', slug: 'limonade-maison', price: 4.50, category_id: 2 },
+      { name: 'Ice Coffee', slug: 'ice-coffee', price: 4.80, category_id: 2 },
+      { name: 'Jus d\'orange', slug: 'jus-orange', price: 3.50, category_id: 2 },
+      { name: 'Croissant', slug: 'croissant', price: 2.20, category_id: 3 },
+      { name: 'Pain au chocolat', slug: 'pain-au-chocolat', price: 2.50, category_id: 3 },
+      { name: 'Tarte aux pommes', slug: 'tarte-aux-pommes', price: 4.20, category_id: 3 },
+      { name: 'Sandwich jambon', slug: 'sandwich-jambon', price: 5.50, category_id: 4 },
+      { name: 'Cookie chocolat', slug: 'cookie-chocolat', price: 1.80, category_id: 4 }
     ]);
 
     // Items <-> ItemOptions (associations)
@@ -53,8 +53,8 @@ module.exports = {
       { state: 'en attente' },
       { state: 'en préparation' },
       { state: 'prête' },
-      { state: 'livrée' },
-      { state: 'annulée' }
+      { state: 'livrée', is_final: true },
+      { state: 'annulée', is_final: true }
     ]);
 
     // Commands types

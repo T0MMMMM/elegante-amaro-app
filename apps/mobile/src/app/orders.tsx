@@ -10,12 +10,6 @@ import { useRouter } from 'expo-router';
 import { Package } from 'lucide-react-native';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-function stateColor(label: string): string {
-  if (label === 'Servie') return theme.colors.success;
-  if (label === 'Annulée') return theme.colors.danger;
-  return theme.colors.warning;
-}
-
 export default function OrdersScreen() {
   const router = useRouter();
   const { user } = useAuth();
@@ -68,7 +62,7 @@ export default function OrdersScreen() {
                   <Text style={styles.meta}>
                     {item.dateLabel} · {item.itemCount} article{item.itemCount > 1 ? 's' : ''}
                   </Text>
-                  <Text style={[styles.state, { color: stateColor(item.stateLabel) }]}>
+                  <Text style={[styles.state, { color: item.stateColor || theme.colors.textMuted }]}>
                     {item.stateLabel}
                   </Text>
                 </View>

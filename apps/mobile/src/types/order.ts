@@ -8,10 +8,16 @@ export interface CommandType {
   name: string;
 }
 
-/** Table `state_commands`. */
+/** Table `state_commands`. Statuts entièrement personnalisables depuis le backoffice. */
 export interface CommandState {
   id: number;
   state: string;
+  position: number | null;
+  color: string | null;
+  /** false si l'admin a masqué ce statut côté mobile. */
+  visibleOnMobile: boolean;
+  /** true pour un statut qui clôt la commande (ex. livrée, annulée). */
+  isFinal: boolean;
 }
 
 /** Table `tables`. */
@@ -37,6 +43,8 @@ export interface OrderSummary {
   number: string;
   dateLabel: string;
   stateLabel: string;
+  /** Couleur configurée par l'admin pour ce statut (backoffice) ; null si non définie. */
+  stateColor: string | null;
   total: number;
   itemCount: number;
   /** ISO — pour trier du plus récent au plus ancien. */
@@ -54,8 +62,14 @@ export interface OngoingOrder {
   id: number;
   number: string;
   stateLabel: string;
-  /** Étape courante : 1 = En attente, 2 = En préparation, 3 = Prête. */
+  /** Couleur configurée par l'admin pour ce statut (backoffice) ; null si non définie. */
+  stateColor: string | null;
+  /** Libellés des statuts non-finaux visibles sur mobile, dans l'ordre du backoffice. */
+  steps: string[];
+  /** Position (1-based) du statut courant dans `steps` ; 0 si absent de la séquence. */
   stateStep: number;
+  /** true si le statut courant est le dernier avant un statut final (ex. "prête"). */
+  isReady: boolean;
   typeLabel: string;
   tableNumber?: number;
   total: number;

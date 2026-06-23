@@ -9,8 +9,6 @@ import { itemsService }         from '../services/items.service'
 import { commandTypesService }  from '../services/commandTypes.service'
 import type { StateCommand } from '@elegante-amaro-app/shared/types'
 
-const TERMINAL = ['livrée', 'annulée']
-
 interface BoardOrder {
   id: number
   table: number | null
@@ -78,7 +76,7 @@ export default function CommandsBoard() {
 
   useEffect(() => {
     load()
-    const tick = setInterval(() => { setNow(new Date()); load() }, 30_000)
+    const tick = setInterval(() => { setNow(new Date()); load() }, 5_000)
     return () => clearInterval(tick)
   }, [load])
 
@@ -131,7 +129,7 @@ export default function CommandsBoard() {
 
       <div style={styles.board}>
         {columns.map(state => {
-          const isTerminal = TERMINAL.includes(state.state)
+          const isTerminal = !!state.is_final
           const seqIdx = sequenceStates.findIndex(s => s.id === state.id)
 
           const rows = orders

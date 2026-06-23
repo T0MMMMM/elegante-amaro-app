@@ -231,13 +231,13 @@ export default function Dashboard() {
     }
   }, [])
 
-  // Tick clock + refresh orders every 60 s
+  // Tick clock + refresh orders every 5 s
   useEffect(() => {
     load()
     const tick = setInterval(() => {
       setNow(new Date())
       load()
-    }, 60_000)
+    }, 5_000)
     return () => clearInterval(tick)
   }, [load])
 
@@ -251,28 +251,33 @@ export default function Dashboard() {
     ))
   }
 
-  const TERMINAL = ['livrée', 'annulée']
-
   const todayStr     = today()
   const todayOrders  = orders.filter(o => o.createdAt.toDateString() === todayStr)
   const activeOrders = todayOrders.filter(o => {
-    const stateName = states.find(s => s.id === o.statusId)?.state ?? ''
-    return !TERMINAL.includes(stateName)
+    const state = states.find(s => s.id === o.statusId)
+    return !state?.is_final
   })
+  // Sur plusieurs statuts finaux configurés (ex. livrée + annulée), "livrée" reste
+  // la référence pour l'historique/CA du jour : c'est le seul nommé explicitement
+  // côté métier (encaissement). Les autres statuts finaux (annulations, etc.)
+  // n'apparaissent pas dans cet historique.
   const servedOrders = todayOrders.filter(o => {
     const stateName = states.find(s => s.id === o.statusId)?.state ?? ''
-    return stateName === 'livrée'
+    return stateName.toLowerCase() === 'livrée'
   })
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
 
+  const displayStates = states.filter(s => !s.is_final && !s.deleted_at)
+    .sort((a, b) => (a.position ?? a.id) - (b.position ?? b.id))
+  const initialState = displayStates[0]
+  const readyState    = displayStates[displayStates.length - 1]
+
   const countActive  = activeOrders.length
-  const countPending = activeOrders.filter(o => states.find(s => s.id === o.statusId)?.state === 'en attente').length
-  const countReady   = activeOrders.filter(o => states.find(s => s.id === o.statusId)?.state === 'prête').length
+  const countPending = initialState ? activeOrders.filter(o => o.statusId === initialState.id).length : 0
+  const countReady   = readyState ? activeOrders.filter(o => o.statusId === readyState.id).length : 0
   const ca           = servedOrders.reduce((s, o) => s + Number(o.total), 0)
   const fmt          = (n: number) =>
     n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'
-
-  const displayStates = states.filter(s => !TERMINAL.includes(s.state) && !s.deleted_at)
 
   if (loading) return (
     <div style={styles.center}>
@@ -326,8 +331,11 @@ export default function Dashboard() {
             const rows = activeOrders.filter(o => o.statusId === state.id)
             if (rows.length === 0) return null
             const stateIdx = displayStates.findIndex(s => s.id === state.id)
+            const firstFinalState = states
+              .filter(s => s.is_final)
+              .sort((a, b) => (a.position ?? a.id) - (b.position ?? b.id))[0]
             const nextState = displayStates[stateIdx + 1]
-              ?? states.find(s => s.state === 'livrée')
+              ?? firstFinalState
               ?? null
 
             return (

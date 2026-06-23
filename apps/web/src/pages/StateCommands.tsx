@@ -86,6 +86,12 @@ export default function StateCommands() {
       ),
     },
     {
+      key: 'visible_on_mobile', label: 'App mobile', width: 110,
+      render: (_v, row) => (
+        <span>{row.visible_on_mobile === false ? 'Masqué' : 'Visible'}</span>
+      ),
+    },
+    {
       key: 'id', label: 'Ordre', width: 90,
       render: (_v, row) => {
         const idx = positionOrder.findIndex(s => s.id === row.id)
@@ -109,7 +115,10 @@ export default function StateCommands() {
 
   const [modalOpen, setModalOpen]         = useState(false)
   const [editing, setEditing]             = useState<StateCommand | null>(null)
-  const emptyForm = { state: '', color: '', quick_action_enabled: false, icon: '', hidden_in_board: false }
+  const emptyForm = {
+    state: '', color: '', quick_action_enabled: false, icon: '',
+    hidden_in_board: false, visible_on_mobile: true, is_final: false,
+  }
   const [form, setForm]                   = useState(emptyForm)
   const [saving, setSaving]               = useState(false)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
@@ -123,6 +132,8 @@ export default function StateCommands() {
       quick_action_enabled: row.quick_action_enabled ?? false,
       icon: row.icon ?? '',
       hidden_in_board: row.hidden_in_board ?? false,
+      visible_on_mobile: row.visible_on_mobile ?? true,
+      is_final: row.is_final ?? false,
     })
     setModalOpen(true)
   }
@@ -209,6 +220,26 @@ export default function StateCommands() {
                 onChange={e => setForm({ ...form, hidden_in_board: e.target.checked })}
               />
               Masquer ce statut dans le suivi des commandes (colonne non affichée)
+            </label>
+          </Field>
+          <Field label="App mobile">
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={!form.visible_on_mobile}
+                onChange={e => setForm({ ...form, visible_on_mobile: !e.target.checked })}
+              />
+              Masquer ce statut sur l'application mobile (étape non affichée dans le suivi client)
+            </label>
+          </Field>
+          <Field label="Statut final">
+            <label style={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={form.is_final}
+                onChange={e => setForm({ ...form, is_final: e.target.checked })}
+              />
+              Ce statut clôt la commande (ex. livrée, annulée) — elle sort des commandes en cours
             </label>
           </Field>
           {form.quick_action_enabled && (

@@ -1,4 +1,5 @@
 import QuantityStepper from '@/src/components/ui/QuantityStepper';
+import { NO_IMAGE } from '@/src/constants/assets';
 import { formatPrice } from '@/src/constants/config';
 import { CartLine } from '@/src/store/cart/cart.types';
 import { SIZES } from '@/src/types';
@@ -20,7 +21,7 @@ export default function CartLineRow({ line, onChangeQty, onRemove }: Props) {
 
   return (
     <View style={styles.row}>
-      <Image source={line.item.image} style={styles.image} contentFit="cover" transition={200} />
+      <Image source={line.item.image || NO_IMAGE} style={styles.image} contentFit="cover" transition={200} />
 
       <View style={styles.body}>
         <View style={styles.headerRow}>

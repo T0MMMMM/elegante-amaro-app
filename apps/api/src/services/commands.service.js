@@ -9,7 +9,7 @@ import Item from "../models/items.model.js";
 const includes = [
   { model: User, attributes: ["id", "name", "email"] },
   { model: CommandType, attributes: ["id", "name"] },
-  { model: StateCommand, attributes: ["id", "state"] },
+  { model: StateCommand, attributes: ["id", "state", "color", "position", "is_final", "visible_on_mobile"] },
   { model: Table, attributes: ["id", "numero"] },
   { model: CommandItem, include: [{ model: Item, attributes: ["id", "name", "price"] }] }
 ];

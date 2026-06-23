@@ -63,6 +63,8 @@ export interface StateCommand {
   quick_action_enabled?: boolean
   icon?: string | null
   hidden_in_board?: boolean
+  visible_on_mobile?: boolean
+  is_final?: boolean
 }
 
 export interface CommandType {

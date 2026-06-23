@@ -1,5 +1,6 @@
 import PressableScale from '@/src/components/ui/PressableScale';
 import Price from '@/src/components/ui/Price';
+import { NO_IMAGE } from '@/src/constants/assets';
 import { theme } from '@/src/theme';
 import { Item } from '@/src/types';
 import { Image } from 'expo-image';
@@ -16,7 +17,7 @@ export default function ItemCard({ item, onPress }: Props) {
   return (
     <PressableScale onPress={onPress} scaleTo={0.96} containerStyle={styles.shell} style={styles.card}>
       <View style={styles.imageWrap}>
-        <Image source={item.image} style={styles.image} contentFit="cover" transition={250} />
+        <Image source={item.image || NO_IMAGE} style={styles.image} contentFit="cover" transition={250} />
       </View>
       <View style={styles.body}>
         <Text style={styles.name} numberOfLines={2}>

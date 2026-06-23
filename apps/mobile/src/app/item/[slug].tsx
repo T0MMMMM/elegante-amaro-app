@@ -5,6 +5,7 @@ import FadeInView from '@/src/components/ui/FadeInView';
 import Price from '@/src/components/ui/Price';
 import QuantityStepper from '@/src/components/ui/QuantityStepper';
 import ScreenLoader from '@/src/components/ui/ScreenLoader';
+import { NO_IMAGE } from '@/src/constants/assets';
 import { menuService } from '@/src/services/menuService';
 import { useCart } from '@/src/store/cart/CartContext';
 import { unitPrice } from '@/src/store/cart/cartReducer';
@@ -65,7 +66,7 @@ export default function ItemDetailScreen() {
     <View style={styles.root}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View>
-          <Image source={item.image} style={styles.image} contentFit="cover" transition={250} />
+          <Image source={item.image || NO_IMAGE} style={styles.image} contentFit="cover" transition={250} />
           <Pressable
             onPress={() => router.back()}
             style={[styles.back, { top: insets.top + theme.spacing.sm }]}

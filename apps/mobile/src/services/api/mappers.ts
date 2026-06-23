@@ -48,7 +48,14 @@ export const mapItemOption = (d: ItemOptionDTO): ItemOption => ({
 
 export const mapCommandType = (d: CommandTypeDTO): CommandType => ({ id: d.id, name: d.name });
 export const mapTable = (d: TableDTO): CafeTable => ({ id: d.id, numero: d.numero });
-export const mapState = (d: StateCommandDTO): CommandState => ({ id: d.id, state: d.state });
+export const mapState = (d: StateCommandDTO): CommandState => ({
+  id: d.id,
+  state: d.state,
+  position: d.position ?? null,
+  color: d.color ?? null,
+  visibleOnMobile: d.visible_on_mobile !== false,
+  isFinal: !!d.is_final,
+});
 
 export const mapUser = (d: UserDTO): User => ({
   id: d.id,
@@ -60,18 +67,8 @@ export const mapUser = (d: UserDTO): User => ({
 
 // --- Commandes ---
 
-const ONGOING_STATES = ['en attente', 'en préparation', 'en preparation', 'prête', 'prete'];
-const STEP_BY_STATE: Record<string, number> = {
-  'en attente': 1,
-  'en préparation': 2,
-  'en preparation': 2,
-  'prête': 3,
-  'prete': 3,
-};
-
-/** Une commande est « en cours » si son état n'est ni servie ni annulée. */
-export const isOngoing = (d: CommandDTO): boolean =>
-  ONGOING_STATES.includes((d.StateCommand?.state ?? '').toLowerCase());
+/** Une commande est « en cours » tant que son statut n'est pas marqué final côté backoffice. */
+export const isOngoing = (d: CommandDTO): boolean => !d.StateCommand?.is_final;
 
 const dateOf = (d: CommandDTO): Date => new Date(d.created_at ?? d.createdAt ?? Date.now());
 
@@ -84,13 +81,23 @@ const formatDateTime = (date: Date): string =>
 const itemCountOf = (d: CommandDTO): number =>
   (d.CommandItems ?? []).reduce((sum, it) => sum + (it.quantity ?? 0), 0);
 
-export const mapOngoingOrder = (d: CommandDTO): OngoingOrder => {
-  const state = d.StateCommand?.state ?? 'En attente';
+/**
+ * Mappe une commande en cours.
+ * `sequence` est la liste ordonnée (position croissante) des statuts non-finaux
+ * visibles sur mobile, configurée depuis le backoffice — elle pilote le tracker
+ * de suivi (nombre d'étapes, libellés, étape courante) sans aucun nom en dur.
+ */
+export const mapOngoingOrder = (d: CommandDTO, sequence: StateCommandDTO[]): OngoingOrder => {
+  const stateCommand = d.StateCommand;
+  const idx = stateCommand ? sequence.findIndex((s) => s.id === stateCommand.id) : -1;
   return {
     id: d.id,
     number: `EA-${d.id}`,
-    stateLabel: state,
-    stateStep: STEP_BY_STATE[state.toLowerCase()] ?? 1,
+    stateLabel: stateCommand?.state ?? 'En attente',
+    stateColor: stateCommand?.color ?? null,
+    steps: sequence.map((s) => s.state),
+    stateStep: idx + 1,
+    isReady: idx !== -1 && idx === sequence.length - 1,
     typeLabel: d.CommandType?.name ?? '',
     tableNumber: d.Table?.numero,
     total: num(d.total_price),
@@ -108,6 +115,7 @@ export const mapOrderSummary = (d: CommandDTO): OrderSummary => ({
   number: `EA-${d.id}`,
   dateLabel: formatDate(dateOf(d)),
   stateLabel: d.StateCommand?.state ?? '',
+  stateColor: d.StateCommand?.color ?? null,
   total: num(d.total_price),
   itemCount: itemCountOf(d),
   createdAt: dateOf(d).toISOString(),

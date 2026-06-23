@@ -3,11 +3,10 @@ import { theme } from '@/src/theme';
 import { OngoingOrder } from '@/src/types';
 import { StyleSheet, Text, View } from 'react-native';
 
-const STEPS = ['En attente', 'En préparation', 'Prête'];
-
 /** Carte de commande en cours : n° de commande, suivi de statut, récap, total. */
 export default function OngoingOrderCard({ order }: { order: OngoingOrder }) {
-  const isReady = order.stateStep === 3;
+  const isReady = order.isReady;
+  const steps = order.steps;
   return (
     <View style={[styles.card, isReady && styles.cardReady]}>
       <View style={styles.header}>
@@ -29,31 +28,35 @@ export default function OngoingOrderCard({ order }: { order: OngoingOrder }) {
         </View>
       </View>
 
-      {/* Suivi de statut */}
-      <View style={styles.dotsRow}>
-        {STEPS.map((label, i) => {
-          const done = i + 1 <= order.stateStep;
-          const connectorDone = i + 1 < order.stateStep;
-          return (
-            <View key={label} style={styles.dotCell}>
-              <View style={[styles.dot, done ? styles.dotDone : styles.dotIdle]} />
-              {i < STEPS.length - 1 ? (
-                <View style={[styles.connector, connectorDone ? styles.connectorDone : styles.connectorIdle]} />
-              ) : null}
-            </View>
-          );
-        })}
-      </View>
-      <View style={styles.labelsRow}>
-        {STEPS.map((label, i) => (
-          <Text
-            key={label}
-            style={[styles.stepLabel, i + 1 <= order.stateStep && styles.stepLabelActive]}
-          >
-            {label}
-          </Text>
-        ))}
-      </View>
+      {/* Suivi de statut — étapes définies depuis le backoffice */}
+      {steps.length > 0 && (
+        <>
+          <View style={styles.dotsRow}>
+            {steps.map((label, i) => {
+              const done = i + 1 <= order.stateStep;
+              const connectorDone = i + 1 < order.stateStep;
+              return (
+                <View key={label} style={styles.dotCell}>
+                  <View style={[styles.dot, done ? styles.dotDone : styles.dotIdle]} />
+                  {i < steps.length - 1 ? (
+                    <View style={[styles.connector, connectorDone ? styles.connectorDone : styles.connectorIdle]} />
+                  ) : null}
+                </View>
+              );
+            })}
+          </View>
+          <View style={styles.labelsRow}>
+            {steps.map((label, i) => (
+              <Text
+                key={label}
+                style={[styles.stepLabel, i + 1 <= order.stateStep && styles.stepLabelActive]}
+              >
+                {label}
+              </Text>
+            ))}
+          </View>
+        </>
+      )}
 
       {/* Récap */}
       <View style={styles.items}>
