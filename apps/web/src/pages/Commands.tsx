@@ -26,7 +26,7 @@ export default function Commands() {
   const [commandTypes,  setCommandTypes]  = useState<CommandType[]>([])
 
   useEffect(() => {
-    Promise.all([getTables(), getUsers(), getStateCommands(true), getCommandTypes()])
+    Promise.all([getTables(), getUsers(true), getStateCommands(true), getCommandTypes()])
       .then(([t, u, sc, ct]) => { setTables(t); setUsers(u); setStateCommands(sc); setCommandTypes(ct) })
       .catch(() => {})
   }, [])

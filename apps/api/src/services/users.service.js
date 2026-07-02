@@ -1,12 +1,8 @@
 import User from "../models/users.model.js";
-import Command from "../models/commands.model.js";
-import CommandItem from "../models/commands_items.model.js";
-import CommandItemOption from "../models/commands_items_options.model.js";
-import sequelize from "../config/database.js";
 
-export const getAllUsers = async () => {
+export const getAllUsers = async (includeDeleted = false) => {
   try {
-    const users = await User.findAll();
+    const users = await User.findAll({ where: includeDeleted ? {} : { deleted_at: null } });
     return users;
   } catch (error) {
     throw new Error("Error fetching users");
@@ -43,26 +39,11 @@ export const updateUser = async (id, data) => {
 export const removeUser = async (id) => {
   try {
     const user = await User.findByPk(id);
-    if (!user) return null;
+    if (!user || user.deleted_at) return null;
 
-    await sequelize.transaction(async (transaction) => {
-      const commands = await Command.findAll({ where: { user_id: id }, transaction });
-      const commandIds = commands.map((c) => c.id);
-
-      if (commandIds.length) {
-        const commandItems = await CommandItem.findAll({ where: { command_id: commandIds }, transaction });
-        const commandItemIds = commandItems.map((ci) => ci.id);
-
-        if (commandItemIds.length) {
-          await CommandItemOption.destroy({ where: { commands_items_id: commandItemIds }, transaction });
-          await CommandItem.destroy({ where: { command_id: commandIds }, transaction });
-        }
-
-        await Command.destroy({ where: { user_id: id }, transaction });
-      }
-
-      await user.destroy({ transaction });
-    });
+    // Soft delete: on conserve l'utilisateur en base pour préserver
+    // les jointures avec l'historique des commandes.
+    await user.update({ deleted_at: new Date() });
 
     return true;
   } catch (error) {

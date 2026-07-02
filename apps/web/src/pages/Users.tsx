@@ -3,6 +3,7 @@ import { createUser, deleteUser, updateUser, getUsers } from '../api/users'
 import { useResource } from '../hooks/useResource'
 import DataTable, { Column, SortDirection } from '../components/ui/DataTable'
 import Modal, { Field, Input } from '../components/ui/Modal'
+import ConfirmDeleteModal from '../components/ui/ConfirmDeleteModal'
 import Button from '../components/ui/Button'
 import PageShell from '../components/ui/PageShell'
 import { theme } from '@elegante-amaro-app/shared/constants'
@@ -87,6 +88,7 @@ export default function Users() {
   const [editing, setEditing]             = useState<User | null>(null)
   const [form, setForm]                   = useState({ name: '', email: '', fidelity_points: 0 })
   const [saving, setSaving]               = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const openCreate = () => {
     setEditing(null)
@@ -100,16 +102,12 @@ export default function Users() {
     setModalOpen(true)
   }
 
-  const handleDelete = async () => {
+  const handleConfirmDelete = async () => {
     if (!editing) return
-    if (!confirm(`Supprimer ${editing.name} ?`)) return
-    try {
-      await deleteUser(editing.id)
-      setData(prev => prev.filter(u => u.id !== editing.id))
-      setModalOpen(false)
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Erreur lors de la suppression')
-    }
+    await deleteUser(editing.id)
+    setData(prev => prev.filter(u => u.id !== editing.id))
+    setConfirmDeleteOpen(false)
+    setModalOpen(false)
   }
 
   const handleSubmit = async () => {
@@ -147,8 +145,7 @@ export default function Users() {
           onClose={() => setModalOpen(false)}
           onSubmit={handleSubmit}
           submitting={saving}
-          onDelete={editing ? handleDelete : undefined}
-          deleteLabel={editing ? `Supprimer ${editing.name}` : undefined}
+          onDelete={editing ? () => setConfirmDeleteOpen(true) : undefined}
         >
           <Field label="Nom">
             <Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
@@ -160,6 +157,15 @@ export default function Users() {
             <Input type="number" value={form.fidelity_points} onChange={e => setForm({ ...form, fidelity_points: Number(e.target.value) })} />
           </Field>
         </Modal>
+      )}
+
+      {confirmDeleteOpen && editing && (
+        <ConfirmDeleteModal
+          title="Supprimer l'utilisateur"
+          message={`Voulez-vous vraiment supprimer l'utilisateur "${editing.name}" ? Son historique de commandes sera conservé.`}
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setConfirmDeleteOpen(false)}
+        />
       )}
     </div>
   )

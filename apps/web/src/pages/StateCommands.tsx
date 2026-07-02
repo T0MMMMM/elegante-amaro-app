@@ -209,7 +209,7 @@ export default function StateCommands() {
                 checked={form.quick_action_enabled}
                 onChange={e => setForm({ ...form, quick_action_enabled: e.target.checked })}
               />
-              Ajouter un bouton sur chaque commande pour la basculer directement vers ce statut
+              Bouton de passage rapide vers ce statut sur chaque commande
             </label>
           </Field>
           <Field label="Visibilité">
@@ -219,7 +219,7 @@ export default function StateCommands() {
                 checked={form.hidden_in_board}
                 onChange={e => setForm({ ...form, hidden_in_board: e.target.checked })}
               />
-              Masquer ce statut dans le suivi des commandes (colonne non affichée)
+              Masquer ce statut dans le suivi des commandes
             </label>
           </Field>
           <Field label="App mobile">
@@ -229,7 +229,7 @@ export default function StateCommands() {
                 checked={!form.visible_on_mobile}
                 onChange={e => setForm({ ...form, visible_on_mobile: !e.target.checked })}
               />
-              Masquer ce statut sur l'application mobile (étape non affichée dans le suivi client)
+              Masquer ce statut sur l'application mobile
             </label>
           </Field>
           <Field label="Statut final">
@@ -239,11 +239,11 @@ export default function StateCommands() {
                 checked={form.is_final}
                 onChange={e => setForm({ ...form, is_final: e.target.checked })}
               />
-              Ce statut clôt la commande (ex. livrée, annulée) — elle sort des commandes en cours
+              Ce statut clôt la commande
             </label>
           </Field>
           {form.quick_action_enabled && (
-            <Field label="Texte du bouton (12 caractères max, par défaut le nom du statut)">
+            <Field label="Texte du bouton">
               <span style={styles.colorField}>
                 <Input
                   value={form.icon}

@@ -2,7 +2,8 @@ import { getAllUsers, getUserById, createUser, updateUser, removeUser } from "..
 
 export const getUsers = async (req, res) => {
   try {
-    res.status(200).json(await getAllUsers());
+    const includeDeleted = req.query.includeDeleted === "true";
+    res.status(200).json(await getAllUsers(includeDeleted));
   } catch (error) {
     res.status(500).json({ message: error.message || "Internal server error" });
   }

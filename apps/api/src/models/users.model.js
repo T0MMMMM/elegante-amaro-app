@@ -32,6 +32,11 @@ const User = sequelize.define("User", {
       const raw = this.getDataValue("roles");
       return typeof raw === "string" ? JSON.parse(raw) : raw;
     }
+  },
+  deleted_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    defaultValue: null
   }
 }, {
   tableName: "users",
