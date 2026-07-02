@@ -2,7 +2,8 @@ import * as service from "../services/categories.service.js";
 
 export const getAll = async (req, res) => {
   try {
-    res.status(200).json(await service.getAll());
+    const includeDeleted = req.query.includeDeleted === "true";
+    res.status(200).json(await service.getAll(includeDeleted));
   } catch (error) {
     res.status(500).json({ message: error.message || "Internal server error" });
   }

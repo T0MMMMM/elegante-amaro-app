@@ -8,7 +8,8 @@ import { usersService }        from '../services/users.service'
 import { commandsService }     from '../services/commands.service'
 import { commandItemsService } from '../services/commandItems.service'
 import { commandTypesService } from '../services/commandTypes.service'
-import type { Item, Category, Table, User, CommandType, CommandSize } from '@elegante-amaro-app/shared/types'
+import { stateCommandsService } from '../services/stateCommands.service'
+import type { Item, Category, Table, User, CommandType, CommandSize, StateCommand } from '@elegante-amaro-app/shared/types'
 
 // Drinks can be ordered in three sizes; the size scales the unit price.
 const SIZES: CommandSize[] = ['petit', 'moyen', 'grand']
@@ -27,6 +28,7 @@ export default function NewCommand() {
   const [tables,       setTables]       = useState<Table[]>([])
   const [users,        setUsers]        = useState<User[]>([])
   const [commandTypes, setCommandTypes] = useState<CommandType[]>([])
+  const [states,       setStates]       = useState<StateCommand[]>([])
   const [quantities,   setQuantities]   = useState<Record<number, number>>({})      // item_id → qty
   const [sizes,        setSizes]        = useState<Record<number, CommandSize>>({})  // item_id → size (drinks only)
   const [mode,         setMode]         = useState<Mode>('sur place')
@@ -41,8 +43,9 @@ export default function NewCommand() {
       tablesService.getAll(),
       usersService.getAll(),
       commandTypesService.getAll(),
+      stateCommandsService.getAll(),
     ])
-      .then(([i, c, t, u, ct]) => { setItems(i); setCategories(c); setTables(t); setUsers(u); setCommandTypes(ct) })
+      .then(([i, c, t, u, ct, sc]) => { setItems(i); setCategories(c); setTables(t); setUsers(u); setCommandTypes(ct); setStates(sc) })
       .catch(() => setLoadError('Impossible de charger les données'))
   }, [])
 
@@ -106,11 +109,15 @@ export default function NewCommand() {
         })
       }
       const typeId = commandTypes.find(t => t.name === mode)?.id ?? (surPlace ? 1 : 2)
+      // Statut initial : premier statut non-final dans l'ordre configuré au
+      // backoffice (l'id 1 peut avoir été supprimé/réordonné).
+      const orderedStates = [...states].sort((a, b) => (a.position ?? a.id) - (b.position ?? b.id))
+      const initialStateId = orderedStates.find(s => !s.is_final)?.id ?? orderedStates[0]?.id ?? 1
       const cmd = await commandsService.create({
         user_id: user.id,
         table_id: surPlace ? form.tableId : null,
         type_id: typeId,
-        state_command_id: 1,
+        state_command_id: initialStateId,
         tva_rate: 10,
         total_price: total,
       })

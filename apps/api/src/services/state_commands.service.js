@@ -7,7 +7,11 @@ export const getAll = async (includeDeleted = false) =>
     order: [["position", "ASC"], ["id", "ASC"]]
   });
 
-export const getById = async (id) => StateCommand.findByPk(id);
+export const getById = async (id) => {
+  const record = await StateCommand.findByPk(id);
+  if (!record || record.deleted_at) return null;
+  return record;
+};
 
 export const create = async (data) => {
   if (data.position == null) {

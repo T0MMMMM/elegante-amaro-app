@@ -36,7 +36,7 @@ export default function Items() {
   const [optionLinks, setOptionLinks]     = useState<ItemItemOption[]>([])
 
   useEffect(() => {
-    getCategories().then(setCategories).catch(() => {})
+    getCategories(true).then(setCategories).catch(() => {})
     getItemOptions().then(setItemOptions).catch(() => {})
     getItemsItemOptions().then(setOptionLinks).catch(() => {})
   }, [])
@@ -243,7 +243,9 @@ export default function Items() {
           <Field label="Catégorie">
             <Select value={form.category_id} onChange={e => setForm({ ...form, category_id: Number(e.target.value) })}>
               <option value={0}>— Choisir une catégorie —</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {categories
+                .filter(c => !c.deleted_at || c.id === form.category_id)
+                .map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </Select>
           </Field>
           <Field label="Options">

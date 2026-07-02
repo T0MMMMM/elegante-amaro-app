@@ -9,6 +9,12 @@ export const SIZES: { value: Size; label: string }[] = [
   { value: 'grand', label: 'Grand' },
 ];
 
+/**
+ * Multiplicateur de prix selon la taille du gobelet.
+ * Aligné sur le backoffice (« moyen » = prix de référence).
+ */
+export const SIZE_MULT: Record<Size, number> = { petit: 0.85, moyen: 1, grand: 1.2 };
+
 /** Table `categories`. */
 export interface Category {
   id: number;

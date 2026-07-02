@@ -7,6 +7,7 @@ export interface User {
   password_hash: string
   fidelity_points: number
   roles: string[]
+  deleted_at?: string | null
 }
 
 // ─── Categories ──────────────────────────────────────────────────────────────
@@ -14,6 +15,7 @@ export interface User {
 export interface Category {
   id: number
   name: string
+  deleted_at?: string | null
 }
 
 // ─── Items ───────────────────────────────────────────────────────────────────
@@ -27,6 +29,7 @@ export interface Item {
   category_id: number
   created_at: string
   updated_at: string
+  deleted_at?: string | null
 }
 
 // ─── Item Options ─────────────────────────────────────────────────────────────
@@ -50,6 +53,7 @@ export interface ItemItemOption {
 export interface Table {
   id: number
   numero: number
+  deleted_at?: string | null
 }
 
 // ─── Command States & Types ───────────────────────────────────────────────────
@@ -76,6 +80,8 @@ export interface CommandType {
 
 export interface Command {
   id: number
+  /** Code lisible de la commande (ex. "AAA044"), généré à la création. */
+  code?: string
   user_id: number
   type_id: number
   state_command_id: number
@@ -84,6 +90,7 @@ export interface Command {
   updated_at: string
   tva_rate: number
   table_id: number
+  deleted_at?: string | null
 }
 
 export type CommandSize = 'petit' | 'moyen' | 'grand'

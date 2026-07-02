@@ -9,9 +9,10 @@ import { useAuth } from '@/src/store/auth/AuthContext';
 import { useCart } from '@/src/store/cart/CartContext';
 import { theme } from '@/src/theme';
 import { CommandItem } from '@/src/types';
+import { formatOrderNumber } from '@elegante-amaro-app/shared/utils';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Check } from 'lucide-react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 export default function PaymentSuccessScreen() {
@@ -25,59 +26,68 @@ export default function PaymentSuccessScreen() {
   const [amount] = useState(() => totals.total);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const created = useRef(false);
+  const submitting = useRef(false); // évite un double envoi concurrent
+  const done = useRef(false);       // commande créée avec succès : ne pas rejouer
 
   // Le paiement est accepté : retour haptique de succès à l'arrivée.
   useEffect(() => {
     haptics.success();
   }, []);
 
-  // Crée la commande une seule fois, à l'arrivée sur l'écran.
-  useEffect(() => {
-    if (created.current) return;
-    created.current = true;
+  // Crée la commande. Réutilisable pour permettre une nouvelle tentative
+  // si l'enregistrement échoue après un paiement déjà accepté (pas de
+  // commande perdue : le panier n'est vidé qu'en cas de succès).
+  const submitOrder = useCallback(async () => {
+    if (submitting.current || done.current) return;
+    submitting.current = true;
+    setError(null);
 
-    (async () => {
-      try {
-        let userId: number;
-        if (user) {
-          userId = user.id;
-        } else {
-          // Commande invité : on crée/retrouve le compte et on l'y connecte.
-          const guest = await userService.upsertGuest(
-            params.guestName ?? '',
-            params.guestEmail ?? '',
-          );
-          await signInAs(guest);
-          userId = guest.id;
-        }
-
-        const items: CommandItem[] = lines.map((l, idx) => ({
-          id: idx + 1,
-          item: l.item,
-          quantity: l.quantity,
-          unitPrice: l.lineTotal / l.quantity,
-          lineTotal: l.lineTotal,
-          size: l.size,
-          options: l.options,
-        }));
-
-        const command = await orderService.createCommand({
-          userId,
-          typeId,
-          tableId,
-          items,
-          totalPrice: amount,
-        });
-
-        clear();
-        setOrderNumber(`EA-${command.id}`);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Impossible d’enregistrer la commande.');
+    try {
+      let userId: number;
+      if (user) {
+        userId = user.id;
+      } else {
+        // Commande invité : on crée/retrouve le compte et on l'y connecte.
+        const guest = await userService.upsertGuest(
+          params.guestName ?? '',
+          params.guestEmail ?? '',
+        );
+        await signInAs(guest);
+        userId = guest.id;
       }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+      const items: CommandItem[] = lines.map((l, idx) => ({
+        id: idx + 1,
+        item: l.item,
+        quantity: l.quantity,
+        unitPrice: l.lineTotal / l.quantity,
+        lineTotal: l.lineTotal,
+        size: l.size,
+        options: l.options,
+      }));
+
+      const command = await orderService.createCommand({
+        userId,
+        typeId,
+        tableId,
+        items,
+        totalPrice: amount,
+      });
+
+      done.current = true;
+      clear();
+      setOrderNumber(formatOrderNumber(command.id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Impossible d’enregistrer la commande.');
+    } finally {
+      submitting.current = false;
+    }
+  }, [user, params.guestName, params.guestEmail, signInAs, lines, typeId, tableId, amount, clear]);
+
+  // Crée la commande à l'arrivée sur l'écran.
+  useEffect(() => {
+    submitOrder();
+  }, [submitOrder]);
 
   const pending = !orderNumber && !error;
 
@@ -121,6 +131,14 @@ export default function PaymentSuccessScreen() {
       ) : null}
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      {error ? (
+        <Button
+          label="Réessayer"
+          onPress={submitOrder}
+          style={styles.button}
+        />
+      ) : null}
 
       <Button
         label="Retour à l'accueil"

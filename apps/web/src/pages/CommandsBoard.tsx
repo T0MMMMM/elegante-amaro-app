@@ -38,9 +38,9 @@ export default function CommandsBoard() {
       const [commands, stateCommands, tables, allCmdItems, allItems, commandTypes] = await Promise.all([
         commandsService.getAll(),
         stateCommandsService.getAll(),
-        tablesService.getAll(),
+        tablesService.getAll(true),
         commandItemsService.getAll(),
-        itemsService.getAll(),
+        itemsService.getAll(true),
         commandTypesService.getAll(),
       ])
 

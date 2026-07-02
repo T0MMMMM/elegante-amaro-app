@@ -11,6 +11,7 @@ import ConfirmDeleteModal from '../components/ui/ConfirmDeleteModal'
 import PageShell from '../components/ui/PageShell'
 import { renderDate } from '../utils/formatDate'
 import { theme } from '@elegante-amaro-app/shared/constants'
+import { formatOrderNumber } from '@elegante-amaro-app/shared/utils'
 import type { Command, CommandType, StateCommand, Table, User } from '@elegante-amaro-app/shared/types'
 
 const emptyForm = { user_id: 0, table_id: 0, type_id: 0, state_command_id: 0, tva_rate: 20, total_price: 0 }
@@ -26,15 +27,18 @@ export default function Commands() {
   const [commandTypes,  setCommandTypes]  = useState<CommandType[]>([])
 
   useEffect(() => {
-    Promise.all([getTables(), getUsers(true), getStateCommands(true), getCommandTypes()])
+    // includeDeleted=true : on doit pouvoir résoudre le nom d'un utilisateur /
+    // le numéro d'une table supprimés pour les commandes de l'historique.
+    Promise.all([getTables(true), getUsers(true), getStateCommands(true), getCommandTypes()])
       .then(([t, u, sc, ct]) => { setTables(t); setUsers(u); setStateCommands(sc); setCommandTypes(ct) })
       .catch(() => {})
   }, [])
 
   const [statusFilter, setStatusFilter] = useState<number[]>([])
   const [typeFilter,   setTypeFilter]   = useState<number[]>([])
-  const [sortKey, setSortKey] = useState<SortKey | null>(null)
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+  // Par défaut : les commandes les plus récentes en premier.
+  const [sortKey, setSortKey] = useState<SortKey | null>('created_at')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
 
   const toggleSort = (key: SortKey) => {
     if (sortKey !== key) { setSortKey(key); setSortDir('asc'); return }
@@ -71,7 +75,8 @@ export default function Commands() {
 
   const columns: Column<Command>[] = useMemo(() => [
     {
-      key: 'id', label: 'ID', width: 50,
+      key: 'id', label: 'N° commande', width: 120,
+      render: (_v, row) => row.code ?? formatOrderNumber(row.id),
       sortable: true,
       sortDirection: (sortKey === 'id' ? sortDir : null) as SortDirection,
       onSortClick: () => toggleSort('id'),
@@ -193,7 +198,9 @@ export default function Commands() {
           <Field label="Utilisateur">
             <Select value={form.user_id} onChange={set('user_id')}>
               <option value={0}>— Choisir un utilisateur —</option>
-              {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+              {users
+                .filter(u => !u.deleted_at || u.id === form.user_id)
+                .map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
             </Select>
           </Field>
 

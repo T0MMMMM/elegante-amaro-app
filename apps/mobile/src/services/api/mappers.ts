@@ -9,6 +9,7 @@ import {
   OrderSummary,
   User,
 } from '@/src/types';
+import { formatOrderNumber } from '@elegante-amaro-app/shared/utils';
 import {
   CategoryDTO,
   CommandDTO,
@@ -92,7 +93,7 @@ export const mapOngoingOrder = (d: CommandDTO, sequence: StateCommandDTO[]): Ong
   const idx = stateCommand ? sequence.findIndex((s) => s.id === stateCommand.id) : -1;
   return {
     id: d.id,
-    number: `EA-${d.id}`,
+    number: d.code ?? formatOrderNumber(d.id),
     stateLabel: stateCommand?.state ?? 'En attente',
     stateColor: stateCommand?.color ?? null,
     steps: sequence.map((s) => s.state),
@@ -112,7 +113,7 @@ export const mapOngoingOrder = (d: CommandDTO, sequence: StateCommandDTO[]): Ong
 
 export const mapOrderSummary = (d: CommandDTO): OrderSummary => ({
   id: d.id,
-  number: `EA-${d.id}`,
+  number: d.code ?? formatOrderNumber(d.id),
   dateLabel: formatDate(dateOf(d)),
   stateLabel: d.StateCommand?.state ?? '',
   stateColor: d.StateCommand?.color ?? null,

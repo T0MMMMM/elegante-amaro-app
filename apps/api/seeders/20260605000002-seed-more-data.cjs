@@ -88,12 +88,12 @@ module.exports = {
     // 6 nouvelles commandes (IDs 4-9)
     const now = new Date();
     await queryInterface.bulkInsert('commands', [
-      { user_id: 5,  type_id: 1, state_command_id: 1, total_price: 9.20,  tva_rate: 10.00, table_id: 11, created_at: new Date(now - 500000),  updated_at: new Date(now - 500000)  },
-      { user_id: 7,  type_id: 2, state_command_id: 3, total_price: 14.50, tva_rate: 10.00, table_id: null, created_at: new Date(now - 900000),  updated_at: new Date(now - 400000)  },
-      { user_id: 8,  type_id: 1, state_command_id: 2, total_price: 11.80, tva_rate: 10.00, table_id: 7,  created_at: new Date(now - 700000),  updated_at: new Date(now - 200000)  },
-      { user_id: 9,  type_id: 1, state_command_id: 4, total_price: 7.70,  tva_rate: 10.00, table_id: 2,  created_at: new Date(now - 7200000), updated_at: new Date(now - 3600000) },
-      { user_id: 10, type_id: 2, state_command_id: 4, total_price: 18.00, tva_rate: 10.00, table_id: null, created_at: new Date(now - 5400000), updated_at: new Date(now - 1800000) },
-      { user_id: 11, type_id: 1, state_command_id: 5, total_price: 5.30,  tva_rate: 10.00, table_id: 15, created_at: new Date(now - 10800000),updated_at: new Date(now - 9000000) }
+      { code: 'AAA004', user_id: 5,  type_id: 1, state_command_id: 1, total_price: 9.50,  tva_rate: 10.00, table_id: 11, created_at: new Date(now - 500000),  updated_at: new Date(now - 500000)  },
+      { code: 'AAA005', user_id: 7,  type_id: 2, state_command_id: 3, total_price: 18.00, tva_rate: 10.00, table_id: null, created_at: new Date(now - 900000),  updated_at: new Date(now - 400000)  },
+      { code: 'AAA006', user_id: 8,  type_id: 1, state_command_id: 2, total_price: 11.36, tva_rate: 10.00, table_id: 7,  created_at: new Date(now - 700000),  updated_at: new Date(now - 200000)  },
+      { code: 'AAA007', user_id: 9,  type_id: 1, state_command_id: 4, total_price: 9.50,  tva_rate: 10.00, table_id: 2,  created_at: new Date(now - 7200000), updated_at: new Date(now - 3600000) },
+      { code: 'AAA008', user_id: 10, type_id: 2, state_command_id: 4, total_price: 19.20, tva_rate: 10.00, table_id: null, created_at: new Date(now - 5400000), updated_at: new Date(now - 1800000) },
+      { code: 'AAA009', user_id: 11, type_id: 1, state_command_id: 5, total_price: 10.30, tva_rate: 10.00, table_id: 15, created_at: new Date(now - 10800000),updated_at: new Date(now - 9000000) }
     ]);
 
     // Items dans les nouvelles commandes (command_id 4-9)
@@ -103,22 +103,22 @@ module.exports = {
       { item_id: 30, command_id: 4, quantity: 1, unit_price: 3.00,  line_total: 3.00,  size: null    },
       { item_id: 12, command_id: 4, quantity: 1, unit_price: 1.80,  line_total: 1.80,  size: null    },
       // Commande 5
-      { item_id: 19, command_id: 5, quantity: 2, unit_price: 4.50,  line_total: 9.00,  size: 'grand' },
-      { item_id: 35, command_id: 5, quantity: 1, unit_price: 5.50,  line_total: 5.50,  size: null    },
+      { item_id: 19, command_id: 5, quantity: 2, unit_price: 5.40,  line_total: 10.80, size: 'grand' },
+      { item_id: 35, command_id: 5, quantity: 1, unit_price: 6.80,  line_total: 6.80,  size: null    },
       // Commande 6
-      { item_id: 1,  command_id: 6, quantity: 2, unit_price: 2.50,  line_total: 5.00,  size: 'petit' },
+      { item_id: 1,  command_id: 6, quantity: 2, unit_price: 2.13,  line_total: 4.26,  size: 'petit' },
       { item_id: 28, command_id: 6, quantity: 1, unit_price: 3.80,  line_total: 3.80,  size: null    },
       { item_id: 9,  command_id: 6, quantity: 1, unit_price: 2.50,  line_total: 2.50,  size: null    },
       // Commande 7
       { item_id: 13, command_id: 7, quantity: 1, unit_price: 2.80,  line_total: 2.80,  size: 'moyen' },
-      { item_id: 31, command_id: 7, quantity: 1, unit_price: 6.50,  line_total: 6.50,  size: null    },
+      { item_id: 31, command_id: 7, quantity: 1, unit_price: 5.50,  line_total: 5.50,  size: null    },
       // Commande 8
       { item_id: 16, command_id: 8, quantity: 2, unit_price: 3.50,  line_total: 7.00,  size: null    },
       { item_id: 36, command_id: 8, quantity: 1, unit_price: 7.00,  line_total: 7.00,  size: null    },
-      { item_id: 22, command_id: 8, quantity: 1, unit_price: 4.00,  line_total: 4.00,  size: null    },
+      { item_id: 22, command_id: 8, quantity: 1, unit_price: 5.20,  line_total: 5.20,  size: null    },
       // Commande 9
       { item_id: 2,  command_id: 9, quantity: 1, unit_price: 3.80,  line_total: 3.80,  size: 'moyen' },
-      { item_id: 32, command_id: 9, quantity: 1, unit_price: 2.80,  line_total: 2.80,  size: null    },
+      { item_id: 32, command_id: 9, quantity: 1, unit_price: 6.50,  line_total: 6.50,  size: null    },
     ]);
 
     // Options sur les nouvelles lignes de commande

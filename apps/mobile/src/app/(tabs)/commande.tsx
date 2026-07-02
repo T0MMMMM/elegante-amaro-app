@@ -33,9 +33,13 @@ export default function CommandeScreen() {
     );
   }
 
+  // Sur place (typeId === 1) : une table doit obligatoirement être choisie.
+  const needsTable = typeId === 1 && !tableId;
+
   // Le panier n'est pas vidé ici : la commande est créée après un paiement
   // réussi. Un invité passe d'abord par la saisie de ses informations.
   const handleValidate = () => {
+    if (needsTable) return;
     if (user) router.push('/checkout/payment');
     else router.push('/checkout/guest-info');
   };
@@ -63,11 +67,14 @@ export default function CommandeScreen() {
           <>
             <Text style={styles.blockTitle}>Votre table</Text>
             <TableSelector tables={tables} selectedId={tableId} onSelect={setTable} />
+            {needsTable ? (
+              <Text style={styles.tableHint}>Veuillez sélectionner une table pour continuer.</Text>
+            ) : null}
           </>
         ) : null}
 
         <View style={styles.summary}>
-          <CartSummary totals={totals} onValidate={handleValidate} />
+          <CartSummary totals={totals} onValidate={handleValidate} disabled={needsTable} />
         </View>
       </ScrollView>
     </ScreenContainer>
@@ -90,6 +97,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     color: theme.colors.espresso,
     marginTop: theme.spacing.sm,
+  },
+  tableHint: {
+    fontFamily: theme.fontFamily.bodyMedium,
+    fontSize: 13,
+    color: theme.colors.danger,
+    marginTop: theme.spacing.xs,
   },
   summary: {
     marginTop: theme.spacing.lg,

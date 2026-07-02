@@ -10,7 +10,7 @@ import { menuService } from '@/src/services/menuService';
 import { useCart } from '@/src/store/cart/CartContext';
 import { unitPrice } from '@/src/store/cart/cartReducer';
 import { theme } from '@/src/theme';
-import { Item, ItemOption, Size } from '@/src/types';
+import { Category, Item, ItemOption, Size, SIZE_MULT } from '@/src/types';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
@@ -25,6 +25,7 @@ export default function ItemDetailScreen() {
   const { addLine } = useCart();
 
   const [item, setItem] = useState<Item | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [options, setOptions] = useState<ItemOption[]>([]);
   const [size, setSize] = useState<Size>('moyen');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -40,14 +41,28 @@ export default function ItemDetailScreen() {
     });
   }, [slug]);
 
+  useEffect(() => {
+    menuService.getCategories().then(setCategories).catch(() => {});
+  }, []);
+
+  // Seules les boissons sont facturées selon la taille du gobelet (comme le backoffice).
+  const isDrink = useMemo(() => {
+    if (!item) return false;
+    const cat = categories.find((c) => c.id === item.categoryId);
+    return !!cat && /boisson/i.test(cat.name);
+  }, [item, categories]);
+
+  // Taille effective : figée à « moyen » pour un article non-boisson.
+  const effectiveSize: Size = isDrink ? size : 'moyen';
+
   const selectedOptions = useMemo(
     () => options.filter((o) => selectedIds.includes(o.id)),
     [options, selectedIds],
   );
 
   const total = useMemo(
-    () => (item ? unitPrice(item, selectedOptions) * quantity : 0),
-    [item, selectedOptions, quantity],
+    () => (item ? unitPrice(item, selectedOptions, effectiveSize) * quantity : 0),
+    [item, selectedOptions, quantity, effectiveSize],
   );
 
   if (!item) return <ScreenLoader />;
@@ -58,7 +73,7 @@ export default function ItemDetailScreen() {
     );
 
   const handleAdd = () => {
-    addLine(item, size, selectedOptions, quantity);
+    addLine(item, effectiveSize, selectedOptions, quantity);
     router.back();
   };
 
@@ -80,14 +95,16 @@ export default function ItemDetailScreen() {
           <FadeInView delay={60}>
             <Text style={styles.overline}>Notre création</Text>
             <Text style={styles.name}>{item.name}</Text>
-            <Price value={item.price} size={28} animate={false} />
+            <Price value={item.price * SIZE_MULT[effectiveSize]} size={28} animate={false} />
             <Text style={styles.description}>{item.description}</Text>
           </FadeInView>
 
-          <FadeInView delay={140} style={styles.section}>
-            <Text style={styles.sectionTitle}>Taille</Text>
-            <SizeSelector value={size} onChange={setSize} />
-          </FadeInView>
+          {isDrink ? (
+            <FadeInView delay={140} style={styles.section}>
+              <Text style={styles.sectionTitle}>Taille</Text>
+              <SizeSelector value={size} onChange={setSize} />
+            </FadeInView>
+          ) : null}
 
           {options.length > 0 ? (
             <FadeInView delay={200} style={styles.section}>

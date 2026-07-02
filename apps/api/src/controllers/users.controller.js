@@ -15,7 +15,7 @@ export const createUserHandler = async (req, res) => {
     res.status(201).json(user);
   } catch (error) {
     console.error(error);
-    res.status(500).json({
+    res.status(error.status || 500).json({
       message: error.message || "Internal server error"
     });
   }

@@ -7,12 +7,14 @@ import { stateCommandsService } from '../services/stateCommands.service'
 import { tablesService }        from '../services/tables.service'
 import { itemsService }         from '../services/items.service'
 import type { StateCommand }    from '@elegante-amaro-app/shared/types'
+import { formatOrderNumber }    from '@elegante-amaro-app/shared/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface DashboardOrder {
   id: number
-  table: number
+  number: string
+  table: number | null
   statusId: number
   statusName: string
   items: string[]
@@ -133,7 +135,12 @@ function OrderRow({
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
     >
-      <span style={styles.tableNum}>T.{String(order.table).padStart(2, '0')}</span>
+      <span style={styles.tableCell}>
+        <span style={styles.orderNum}>{order.number}</span>
+        {order.table != null
+          ? <span style={styles.tableNum}>T.{String(order.table).padStart(2, '0')}</span>
+          : <span style={{ ...styles.tableNum, fontSize: 16, letterSpacing: '0.04em' }}>À emporter</span>}
+      </span>
       <span style={styles.items}>
         {order.items.length > 0 ? order.items.join(' · ') : <em>Aucun article</em>}
       </span>
@@ -171,7 +178,9 @@ function HistoryRow({ order }: { order: DashboardOrder }) {
   return (
     <div style={styles.historyRow}>
       <span style={styles.historyTime}>{servedAt(order.createdAt)}</span>
-      <span style={styles.historyTable}>T.{String(order.table).padStart(2, '0')}</span>
+      {order.table != null
+        ? <span style={styles.historyTable}>T.{String(order.table).padStart(2, '0')}</span>
+        : <span style={{ ...styles.historyTable, fontSize: 14, letterSpacing: '0.04em' }}>À emporter</span>}
       <span style={styles.historyItems}>
         {order.items.length > 0 ? order.items.join(' · ') : '—'}
       </span>
@@ -195,9 +204,9 @@ export default function Dashboard() {
       const [commands, stateCommands, tables, allCmdItems, allItems] = await Promise.all([
         commandsService.getAll(),
         stateCommandsService.getAll(true),
-        tablesService.getAll(),
+        tablesService.getAll(true),
         commandItemsService.getAll(),
-        itemsService.getAll(),
+        itemsService.getAll(true),
       ])
 
       const sorted = [...stateCommands].sort((a, b) => a.id - b.id)
@@ -213,7 +222,9 @@ export default function Dashboard() {
         })
         return {
           id: cmd.id,
-          table: table?.numero ?? cmd.table_id,
+          number: cmd.code ?? formatOrderNumber(cmd.id),
+          // table_id null ⇒ commande à emporter (pas de table)
+          table: cmd.table_id != null ? (table?.numero ?? cmd.table_id) : null,
           statusId: cmd.state_command_id,
           statusName: state?.state ?? `Statut #${cmd.state_command_id}`,
           items: labels,
@@ -415,6 +426,8 @@ const styles: Record<string, React.CSSProperties> = {
   sectionRule:   { flex: 1, height: 1, backgroundColor: 'rgba(42,31,21,0.08)' },
   sectionCount:  { fontFamily: theme.fonts.ui, fontSize: 12, fontWeight: 600, color: theme.colors.muted, letterSpacing: '0.08em' },
 
+  tableCell: { display: 'flex', flexDirection: 'column', gap: 3, minWidth: 80 },
+  orderNum: { fontFamily: theme.fonts.ui, fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: theme.colors.accent },
   tableNum: { fontFamily: theme.fonts.title, fontSize: 36, color: theme.colors.onPrimary, letterSpacing: '0.04em', lineHeight: 1, minWidth: 80 },
   items:    { fontFamily: theme.fonts.body, fontSize: 16, fontWeight: 400, color: theme.colors.muted, flex: 1 },
   time:     { fontFamily: theme.fonts.ui, fontSize: 14, letterSpacing: '0.04em', minWidth: 80, textAlign: 'right' },

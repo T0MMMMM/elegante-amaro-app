@@ -1,4 +1,5 @@
 import Command from "../models/commands.model.js";
+import { formatOrderNumber } from "../utils/orderNumber.js";
 import User from "../models/users.model.js";
 import CommandType from "../models/commands_types.model.js";
 import StateCommand from "../models/state_commands.model.js";
@@ -14,11 +15,19 @@ const includes = [
   { model: CommandItem, include: [{ model: Item, attributes: ["id", "name", "price"] }] }
 ];
 
-export const getAll = async () => Command.findAll({ include: includes });
+export const getAll = async (includeDeleted = false) =>
+  Command.findAll({ where: includeDeleted ? {} : { deleted_at: null }, include: includes });
 
 export const getById = async (id) => Command.findByPk(id, { include: includes });
 
-export const create = async (data) => Command.create(data);
+export const create = async (data) => {
+  const record = await Command.create(data);
+  // Le code dépend de l'id auto-incrémenté : on le renseigne juste après.
+  if (!record.code) {
+    await record.update({ code: formatOrderNumber(record.id) });
+  }
+  return record;
+};
 
 export const update = async (id, data) => {
   const record = await Command.findByPk(id);
@@ -28,7 +37,10 @@ export const update = async (id, data) => {
 
 export const remove = async (id) => {
   const record = await Command.findByPk(id);
-  if (!record) return null;
-  await record.destroy();
+  if (!record || record.deleted_at) return null;
+
+  // Soft delete : la commande sort de l'interface mais reste en base
+  // (historique, statistiques, intégrité des lignes/paiements conservée).
+  await record.update({ deleted_at: new Date() });
   return true;
 };

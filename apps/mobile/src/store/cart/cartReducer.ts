@@ -1,4 +1,4 @@
-import { Item, ItemOption, Size } from '@/src/types';
+import { Item, ItemOption, Size, SIZE_MULT } from '@/src/types';
 import { CartAction, CartLine, CartState } from './cart.types';
 
 export const initialCartState: CartState = {
@@ -7,9 +7,13 @@ export const initialCartState: CartState = {
   tableId: undefined,
 };
 
-/** Prix unitaire = prix de base + somme des extras d'options. */
-export function unitPrice(item: Item, options: ItemOption[]): number {
-  return item.price + options.reduce((sum, o) => sum + o.extraPrice, 0);
+/**
+ * Prix unitaire = (prix de base × multiplicateur de taille) + somme des extras.
+ * La taille n'a d'effet que sur les boissons ; pour les autres articles,
+ * la taille reste « moyen » (multiplicateur 1), comme sur le backoffice.
+ */
+export function unitPrice(item: Item, options: ItemOption[], size: Size = 'moyen'): number {
+  return item.price * SIZE_MULT[size] + options.reduce((sum, o) => sum + o.extraPrice, 0);
 }
 
 /** Signature stable d'une ligne (item + taille + options triées). */
@@ -33,7 +37,7 @@ function buildLine(
     size,
     options,
     quantity,
-    lineTotal: unitPrice(item, options) * quantity,
+    lineTotal: unitPrice(item, options, size) * quantity,
   };
 }
 

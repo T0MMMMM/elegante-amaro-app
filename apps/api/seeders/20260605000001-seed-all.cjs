@@ -50,11 +50,11 @@ module.exports = {
 
     // State commands
     await queryInterface.bulkInsert('state_commands', [
-      { state: 'en attente' },
-      { state: 'en préparation' },
-      { state: 'prête' },
-      { state: 'livrée', is_final: true },
-      { state: 'annulée', is_final: true }
+      { state: 'en attente',     is_final: false },
+      { state: 'en préparation', is_final: false },
+      { state: 'prête',          is_final: false },
+      { state: 'livrée',         is_final: true },
+      { state: 'annulée',        is_final: true }
     ]);
 
     // Commands types
@@ -105,30 +105,33 @@ module.exports = {
     const now = new Date();
     await queryInterface.bulkInsert('commands', [
       {
+        code: 'AAA001',
         user_id: 3,
         type_id: 1,
         state_command_id: 4,
-        total_price: 8.30,
+        total_price: 8.70,
         tva_rate: 10.00,
         table_id: 3,
         created_at: new Date(now - 3600000),
         updated_at: new Date(now - 1800000)
       },
       {
+        code: 'AAA002',
         user_id: 4,
         type_id: 2,
         state_command_id: 3,
-        total_price: 6.00,
+        total_price: 7.10,
         tva_rate: 10.00,
         table_id: null,
         created_at: new Date(now - 1200000),
         updated_at: new Date(now - 600000)
       },
       {
+        code: 'AAA003',
         user_id: 3,
         type_id: 1,
         state_command_id: 2,
-        total_price: 12.50,
+        total_price: 13.76,
         tva_rate: 10.00,
         table_id: 5,
         created_at: new Date(now - 300000),
@@ -140,9 +143,9 @@ module.exports = {
     await queryInterface.bulkInsert('commands_items', [
       { item_id: 2, command_id: 1, quantity: 1, unit_price: 3.80, line_total: 3.80, size: 'moyen' },
       { item_id: 8, command_id: 1, quantity: 2, unit_price: 2.20, line_total: 4.40, size: null },
-      { item_id: 3, command_id: 2, quantity: 1, unit_price: 4.00, line_total: 4.00, size: 'grand' },
+      { item_id: 3, command_id: 2, quantity: 1, unit_price: 4.80, line_total: 4.80, size: 'grand' },
       { item_id: 12, command_id: 2, quantity: 1, unit_price: 1.80, line_total: 1.80, size: null },
-      { item_id: 1, command_id: 3, quantity: 2, unit_price: 2.50, line_total: 5.00, size: 'petit' },
+      { item_id: 1, command_id: 3, quantity: 2, unit_price: 2.13, line_total: 4.26, size: 'petit' },
       { item_id: 10, command_id: 3, quantity: 1, unit_price: 4.20, line_total: 4.20, size: null },
       { item_id: 5, command_id: 3, quantity: 1, unit_price: 4.50, line_total: 4.50, size: null }
     ]);

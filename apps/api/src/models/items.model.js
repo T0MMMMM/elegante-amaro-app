@@ -7,7 +7,8 @@ const Item = sequelize.define("Item", {
   slug: { type: DataTypes.STRING(150), allowNull: true, unique: true },
   price: { type: DataTypes.DECIMAL(10, 2), allowNull: true },
   image: { type: DataTypes.STRING(255), allowNull: true },
-  category_id: { type: DataTypes.BIGINT, allowNull: true }
+  category_id: { type: DataTypes.BIGINT, allowNull: true },
+  deleted_at: { type: DataTypes.DATE, allowNull: true, defaultValue: null }
 }, {
   tableName: "items",
   timestamps: true,

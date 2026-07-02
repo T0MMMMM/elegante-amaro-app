@@ -1,7 +1,7 @@
 import Category from "../models/categories.model.js";
-import Item from "../models/items.model.js";
 
-export const getAll = async () => Category.findAll();
+export const getAll = async (includeDeleted = false) =>
+  Category.findAll({ where: includeDeleted ? {} : { deleted_at: null } });
 
 export const getById = async (id) => Category.findByPk(id);
 
@@ -15,16 +15,10 @@ export const update = async (id, data) => {
 
 export const remove = async (id) => {
   const record = await Category.findByPk(id);
-  if (!record) return null;
+  if (!record || record.deleted_at) return null;
 
-  const itemCount = await Item.count({ where: { category_id: id } });
-  if (itemCount > 0) {
-    throw Object.assign(
-      new Error("Impossible de supprimer cette catégorie : des articles y sont encore associés."),
-      { status: 409 }
-    );
-  }
-
-  await record.destroy();
+  // Soft delete : la catégorie disparaît de l'interface mais reste en base
+  // pour préserver le libellé des articles de l'historique.
+  await record.update({ deleted_at: new Date() });
   return true;
 };

@@ -6,6 +6,7 @@
     "./constants": "./constants/index.ts",
     "./constants/colors": "./constants/colors.ts",
     "./constants/fonts": "./constants/fonts.ts",
-    "./types": "./types/index.ts"
+    "./types": "./types/index.ts",
+    "./utils": "./utils/index.ts"
   }
 }
